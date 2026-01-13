@@ -27,8 +27,10 @@ const MERGE_MODE = {
 			merge_threshold = MERGE_MODE[mode]
 			regenerate_all_cells()
 @export_storage var height_map : Array # Stores the heights from the heightmap.
-@export_storage var color_map_0 : PackedColorArray # Stores the colors from vertex_color_0
-@export_storage var color_map_1 : PackedColorArray # Stores the colors from vertex_color_1.
+@export_storage var color_map_0 : PackedColorArray # Stores the colors from vertex_color_0 (ground)
+@export_storage var color_map_1 : PackedColorArray # Stores the colors from vertex_color_1 (ground)
+@export_storage var wall_color_map_0 : PackedColorArray # Stores the colors for wall vertices (slot encoding channel 0)
+@export_storage var wall_color_map_1 : PackedColorArray # Stores the colors for wall vertices (slot encoding channel 1)
 @export_storage var grass_mask_map : PackedColorArray # Stores if a cell should have grass or not.
 
 var merge_threshold : float = MERGE_MODE[Mode.POLYHEDRON]
@@ -88,6 +90,8 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 			generate_height_map()
 		if not color_map_0 or not color_map_1:
 			generate_color_maps()
+		if not wall_color_map_0 or not wall_color_map_1:
+			generate_wall_color_maps()
 		if not grass_mask_map:
 			generate_grass_mask_map()
 		if not mesh and should_regenerate_mesh:
@@ -566,45 +570,50 @@ func add_point(x: float, y: float, z: float, uv_x: float = 0, uv_y: float = 0, d
 	# Walls will always have UV of 1, 1
 	var uv = Vector2(uv_x, uv_y) if floor_mode else Vector2(1, 1)
 	st.set_uv(uv)
-	
+
+	# Select source color maps based on floor_mode
+	# Floor vertices use color_map_0/1, wall vertices use wall_color_map_0/1
+	var source_map_0 : PackedColorArray = color_map_0 if floor_mode else wall_color_map_0
+	var source_map_1 : PackedColorArray = color_map_1 if floor_mode else wall_color_map_1
+
 	# Use the minimum between both lerped diagonals, component-wise
 	# Will result in smoother diagonal paths
 	var color_0: Color
 	if new_chunk:
 		color_0 = Color(1.0, 0.0, 0.0, 0.0)
-		color_map_0[cell_coords.y*dimensions.x + cell_coords.x] = Color(1.0, 0.0, 0.0, 0.0)
+		source_map_0[cell_coords.y*dimensions.x + cell_coords.x] = Color(1.0, 0.0, 0.0, 0.0)
 	elif diag_midpoint:
-		var ad_color = lerp(color_map_0[cell_coords.y*dimensions.x + cell_coords.x], color_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], 0.5)
-		var bc_color = lerp(color_map_0[cell_coords.y*dimensions.x + cell_coords.x + 1], color_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x], 0.5)
+		var ad_color = lerp(source_map_0[cell_coords.y*dimensions.x + cell_coords.x], source_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], 0.5)
+		var bc_color = lerp(source_map_0[cell_coords.y*dimensions.x + cell_coords.x + 1], source_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x], 0.5)
 		color_0 = Color(min(ad_color.r, bc_color.r), min(ad_color.g, bc_color.g), min(ad_color.b, bc_color.b), min(ad_color.a, bc_color.a))
 		if ad_color.r > 0.99 or bc_color.r > 0.99: color_0.r = 1.0;
 		if ad_color.g > 0.99 or bc_color.g > 0.99: color_0.g = 1.0;
 		if ad_color.b > 0.99 or bc_color.b > 0.99: color_0.b = 1.0;
 		if ad_color.a > 0.99 or bc_color.a > 0.99: color_0.a = 1.0;
 	else:
-		var ab_color = lerp(color_map_0[cell_coords.y*dimensions.x + cell_coords.x], color_map_0[cell_coords.y*dimensions.x + cell_coords.x + 1], x)
-		var cd_color = lerp(color_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x], color_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], x)
-		color_0 = get_dominant_color(lerp(ab_color, cd_color, z)) #Use this for mixed triangles
-		#color_0 = color_map_0[cell_coords.y * dimensions.x + cell_coords.x] #Use this for perfect square tiles
+		var ab_color = lerp(source_map_0[cell_coords.y*dimensions.x + cell_coords.x], source_map_0[cell_coords.y*dimensions.x + cell_coords.x + 1], x)
+		var cd_color = lerp(source_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x], source_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], x)
+		# color_0 = get_dominant_color(lerp(ab_color, cd_color, z)) #Use this for mixed triangles
+		color_0 = source_map_0[cell_coords.y * dimensions.x + cell_coords.x] #Use this for perfect square tiles
 	st.set_color(color_0)
-	
+
 	var color_1: Color
 	if new_chunk:
 		color_1 = Color(1.0, 0.0, 0.0, 0.0)
-		color_map_1[cell_coords.y*dimensions.x + cell_coords.x] = Color(1.0, 0.0, 0.0, 0.0)
+		source_map_1[cell_coords.y*dimensions.x + cell_coords.x] = Color(1.0, 0.0, 0.0, 0.0)
 	elif diag_midpoint:
-		var ad_color = lerp(color_map_1[cell_coords.y*dimensions.x + cell_coords.x], color_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], 0.5)
-		var bc_color = lerp(color_map_1[cell_coords.y*dimensions.x + cell_coords.x + 1], color_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x], 0.5)
+		var ad_color = lerp(source_map_1[cell_coords.y*dimensions.x + cell_coords.x], source_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], 0.5)
+		var bc_color = lerp(source_map_1[cell_coords.y*dimensions.x + cell_coords.x + 1], source_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x], 0.5)
 		color_1 = Color(min(ad_color.r, bc_color.r), min(ad_color.g, bc_color.g), min(ad_color.b, bc_color.b), min(ad_color.a, bc_color.a))
-		if ad_color.r > 0.99 or bc_color.r > 0.99: color_0.r = 1.0;
-		if ad_color.g > 0.99 or bc_color.g > 0.99: color_0.g = 1.0;
-		if ad_color.b > 0.99 or bc_color.b > 0.99: color_0.b = 1.0;
-		if ad_color.a > 0.99 or bc_color.a > 0.99: color_0.a = 1.0;
+		if ad_color.r > 0.99 or bc_color.r > 0.99: color_1.r = 1.0;
+		if ad_color.g > 0.99 or bc_color.g > 0.99: color_1.g = 1.0;
+		if ad_color.b > 0.99 or bc_color.b > 0.99: color_1.b = 1.0;
+		if ad_color.a > 0.99 or bc_color.a > 0.99: color_1.a = 1.0;
 	else:
-		var ab_color = lerp(color_map_1[cell_coords.y*dimensions.x + cell_coords.x], color_map_1[cell_coords.y*dimensions.x + cell_coords.x + 1], x)
-		var cd_color = lerp(color_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x], color_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], x)
-		color_1 = get_dominant_color(lerp(ab_color, cd_color, z)) #Use this for mixed triangles
-		#color_1 = color_map_1[cell_coords.y * dimensions.x + cell_coords.x] #Use this for perfect square tiles
+		var ab_color = lerp(source_map_1[cell_coords.y*dimensions.x + cell_coords.x], source_map_1[cell_coords.y*dimensions.x + cell_coords.x + 1], x)
+		var cd_color = lerp(source_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x], source_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], x)
+		# color_1 = get_dominant_color(lerp(ab_color, cd_color, z)) #Use this for mixed triangles
+		color_1 = source_map_1[cell_coords.y * dimensions.x + cell_coords.x] #Use this for perfect square tiles
 	st.set_custom(0, color_1)
 	
 	var is_ridge := false
@@ -890,6 +899,17 @@ func generate_color_maps():
 			color_map_1[z*dimensions.x + x] = Color(0,0,0,0)
 
 
+func generate_wall_color_maps():
+	wall_color_map_0 = PackedColorArray()
+	wall_color_map_1 = PackedColorArray()
+	wall_color_map_0.resize(dimensions.z * dimensions.x)
+	wall_color_map_1.resize(dimensions.z * dimensions.x)
+	for z in range(dimensions.z):
+		for x in range(dimensions.x):
+			wall_color_map_0[z*dimensions.x + x] = Color(1,0,0,0)  # Default to texture slot 0
+			wall_color_map_1[z*dimensions.x + x] = Color(1,0,0,0)
+
+
 func generate_grass_mask_map():
 	grass_mask_map = Array()
 	grass_mask_map.resize(dimensions.z * dimensions.x)
@@ -907,6 +927,12 @@ func get_color_0(cc: Vector2i) -> Color:
 
 func get_color_1(cc: Vector2i) -> Color:
 	return color_map_1[cc.y*dimensions.x + cc.x]
+
+func get_wall_color_0(cc: Vector2i) -> Color:
+	return wall_color_map_0[cc.y*dimensions.x + cc.x]
+
+func get_wall_color_1(cc: Vector2i) -> Color:
+	return wall_color_map_1[cc.y*dimensions.x + cc.x]
 
 
 func get_grass_mask(cc: Vector2i) -> Color:
@@ -935,6 +961,22 @@ func draw_color_0(x: int, z: int, color: Color):
 
 func draw_color_1(x: int, z: int, color: Color):
 	color_map_1[z*dimensions.x + x] = color
+	notify_needs_update(z, x)
+	notify_needs_update(z, x-1)
+	notify_needs_update(z-1, x)
+	notify_needs_update(z-1, x-1)
+
+
+func draw_wall_color_0(x: int, z: int, color: Color):
+	wall_color_map_0[z*dimensions.x + x] = color
+	notify_needs_update(z, x)
+	notify_needs_update(z, x-1)
+	notify_needs_update(z-1, x)
+	notify_needs_update(z-1, x-1)
+
+
+func draw_wall_color_1(x: int, z: int, color: Color):
+	wall_color_map_1[z*dimensions.x + x] = color
 	notify_needs_update(z, x)
 	notify_needs_update(z, x-1)
 	notify_needs_update(z-1, x)

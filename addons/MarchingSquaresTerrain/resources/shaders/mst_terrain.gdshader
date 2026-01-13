@@ -11,7 +11,20 @@ uniform vec4 ground_albedo_4 : source_color = vec4(0.392, 0.475, 0.255, 1.0);
 uniform vec4 ground_albedo_5 : source_color = vec4(0.29, 0.494, 0.365, 1.0);
 uniform vec4 ground_albedo_6 : source_color = vec4(0.443, 0.447, 0.365, 1.0);
 uniform vec4 wall_albedo : source_color = vec4(0.369, 0.337, 0.271, 1.0);
-uniform sampler2D wall_texture : source_color, repeat_enable;
+uniform vec4 wall_albedo_2 : source_color = vec4(0.4, 0.35, 0.28, 1.0);
+uniform vec4 wall_albedo_3 : source_color = vec4(0.35, 0.32, 0.25, 1.0);
+uniform vec4 wall_albedo_4 : source_color = vec4(0.38, 0.34, 0.27, 1.0);
+uniform vec4 wall_albedo_5 : source_color = vec4(0.36, 0.33, 0.26, 1.0);
+uniform vec4 wall_albedo_6 : source_color = vec4(0.42, 0.38, 0.30, 1.0);
+group_uniforms;
+
+group_uniforms Wall_Textures;
+uniform sampler2D wall_tex_1 : source_color, repeat_enable;
+uniform sampler2D wall_tex_2 : source_color, repeat_enable;
+uniform sampler2D wall_tex_3 : source_color, repeat_enable;
+uniform sampler2D wall_tex_4 : source_color, repeat_enable;
+uniform sampler2D wall_tex_5 : source_color, repeat_enable;
+uniform sampler2D wall_tex_6 : source_color, repeat_enable;
 group_uniforms;
 
 group_uniforms Vertex_Colors;
@@ -126,6 +139,19 @@ vec4 get_material(vec2 uv) {
 	return materials[material_index];
 }
 
+vec4 get_wall_material(vec2 uv) {
+	// 6 wall textures paired 1-to-1 with 6 wall albedos
+	vec4 wall_materials[6] = vec4[6](
+		texture(wall_tex_1, uv) * wall_albedo,
+		texture(wall_tex_2, uv) * wall_albedo_2,
+		texture(wall_tex_3, uv) * wall_albedo_3,
+		texture(wall_tex_4, uv) * wall_albedo_4,
+		texture(wall_tex_5, uv) * wall_albedo_5,
+		texture(wall_tex_6, uv) * wall_albedo_6
+	);
+	return wall_materials[clamp(material_index, 0, 5)];
+}
+
 void vertex() {
 	material_index = get_material_index(COLOR, CUSTOM0);
 	vertex_normal = NORMAL;
@@ -152,10 +178,14 @@ void fragment() {
 		vec2 uv_x = vertex_pos.zy;
 		vec2 uv_z = vertex_pos.xy;
 
-		vec3 texture_x = texture(wall_texture, uv_x * tiling_factor_wall * 2.0).rgb * weights.x;
-		vec3 texture_z = texture(wall_texture, uv_z * tiling_factor_wall * 2.0).rgb * weights.z;
+		// Use per-vertex wall texture selection (same material_index as ground)
+		vec4 wall_mat_x = get_wall_material(uv_x * tiling_factor_wall * 2.0);
+		vec4 wall_mat_z = get_wall_material(uv_z * tiling_factor_wall * 2.0);
 
-		ALBEDO = wall_albedo.rgb * (texture_x + texture_z);
+		vec3 texture_x = wall_mat_x.rgb * weights.x;
+		vec3 texture_z = wall_mat_z.rgb * weights.z;
+
+		ALBEDO = texture_x + texture_z;
 	}
 }
 
