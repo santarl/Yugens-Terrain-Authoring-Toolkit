@@ -596,67 +596,12 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 		undo_redo.add_undo_method(self, "draw_grass_mask_pattern_action", terrain, restore_pattern)
 		undo_redo.commit_action()
 	else:
-		undo_redo.create_action("terrain height draw")
-		undo_redo.add_do_method(self, "draw_height_pattern_action", terrain, pattern)
-		undo_redo.add_undo_method(self, "draw_height_pattern_action", terrain, restore_pattern)
-		undo_redo.commit_action()
-
-		# Apply preset textures during terrain modification (biome painting)
+		# TIMING FIX: Apply wall colors BEFORE height action when using presets
+		# This ensures that when regenerate_mesh() creates ridge vertices during the height action,
+		# the wall_color_map already has the correct preset values (not old/default values).
+		# Ridge vertices are floor vertices near cliff edges that render as walls.
 		if selected_preset:
-			# FIRST: Apply grass mask from preset (before any mesh regeneration)
-			# has_grass=true: Force grass ON (green channel = 1)
-			# has_grass=false: Force grass OFF (red channel = 0, masked)
-			var grass_pattern := {}
-			var grass_restore := {}
-			for chunk_coords in pattern:
-				grass_pattern[chunk_coords] = {}
-				grass_restore[chunk_coords] = {}
-				var chunk : MarchingSquaresTerrainChunk = terrain.chunks[chunk_coords]
-				for cell_coords in pattern[chunk_coords]:
-					grass_restore[chunk_coords][cell_coords] = chunk.get_grass_mask(cell_coords)
-					if selected_preset.has_grass:
-						# Force grass ON: set green channel to override texture setting
-						grass_pattern[chunk_coords][cell_coords] = Color(1, 1, 0, 0)
-					else:
-						# Force grass OFF: clear red channel to mask out grass
-						grass_pattern[chunk_coords][cell_coords] = Color(0, 0, 0, 0)
-
-			undo_redo.create_action("preset grass mask")
-			undo_redo.add_do_method(self, "draw_grass_mask_pattern_action", terrain, grass_pattern)
-			undo_redo.add_undo_method(self, "draw_grass_mask_pattern_action", terrain, grass_restore)
-			undo_redo.commit_action()
-
-			# Set vertex colors from preset's ground texture slot
-			_set_vertex_colors(selected_preset.ground_texture_slot)
-
-			var color_pattern := {}
-			var color_pattern_cc := {}
-			var color_restore := {}
-			var color_restore_cc := {}
-
-			for chunk_coords in pattern:
-				color_pattern[chunk_coords] = {}
-				color_pattern_cc[chunk_coords] = {}
-				color_restore[chunk_coords] = {}
-				color_restore_cc[chunk_coords] = {}
-				var chunk : MarchingSquaresTerrainChunk = terrain.chunks[chunk_coords]
-				for cell_coords in pattern[chunk_coords]:
-					color_restore[chunk_coords][cell_coords] = chunk.get_color_0(cell_coords)
-					color_restore_cc[chunk_coords][cell_coords] = chunk.get_color_1(cell_coords)
-					color_pattern[chunk_coords][cell_coords] = vertex_color_0
-					color_pattern_cc[chunk_coords][cell_coords] = vertex_color_1
-
-			undo_redo.create_action("preset ground texture")
-			undo_redo.add_do_method(self, "draw_color_0_pattern_action", terrain, color_pattern)
-			undo_redo.add_undo_method(self, "draw_color_0_pattern_action", terrain, color_restore)
-			undo_redo.commit_action()
-
-			undo_redo.create_action("preset ground texture cc")
-			undo_redo.add_do_method(self, "draw_color_1_pattern_action", terrain, color_pattern_cc)
-			undo_redo.add_undo_method(self, "draw_color_1_pattern_action", terrain, color_restore_cc)
-			undo_redo.commit_action()
-
-			# Apply WALL texture from preset
+			# Apply WALL texture from preset FIRST (before height changes)
 			# Walls appear at boundaries, so we need to expand the pattern to include adjacent cells
 			_set_vertex_colors(selected_preset.wall_texture_slot)
 
@@ -737,6 +682,67 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 			undo_redo.create_action("preset wall texture cc")
 			undo_redo.add_do_method(self, "draw_wall_color_1_pattern_action", terrain, wall_color_pattern_cc)
 			undo_redo.add_undo_method(self, "draw_wall_color_1_pattern_action", terrain, wall_color_restore_cc)
+			undo_redo.commit_action()
+
+		# NOW apply height action - ridges will be created with correct wall colors
+		undo_redo.create_action("terrain height draw")
+		undo_redo.add_do_method(self, "draw_height_pattern_action", terrain, pattern)
+		undo_redo.add_undo_method(self, "draw_height_pattern_action", terrain, restore_pattern)
+		undo_redo.commit_action()
+
+		# Apply remaining preset settings (grass mask and ground colors) after height changes
+		if selected_preset:
+			# Apply grass mask from preset
+			# has_grass=true: Force grass ON (green channel = 1)
+			# has_grass=false: Force grass OFF (red channel = 0, masked)
+			var grass_pattern := {}
+			var grass_restore := {}
+			for chunk_coords in pattern:
+				grass_pattern[chunk_coords] = {}
+				grass_restore[chunk_coords] = {}
+				var chunk : MarchingSquaresTerrainChunk = terrain.chunks[chunk_coords]
+				for cell_coords in pattern[chunk_coords]:
+					grass_restore[chunk_coords][cell_coords] = chunk.get_grass_mask(cell_coords)
+					if selected_preset.has_grass:
+						# Force grass ON: set green channel to override texture setting
+						grass_pattern[chunk_coords][cell_coords] = Color(1, 1, 0, 0)
+					else:
+						# Force grass OFF: clear red channel to mask out grass
+						grass_pattern[chunk_coords][cell_coords] = Color(0, 0, 0, 0)
+
+			undo_redo.create_action("preset grass mask")
+			undo_redo.add_do_method(self, "draw_grass_mask_pattern_action", terrain, grass_pattern)
+			undo_redo.add_undo_method(self, "draw_grass_mask_pattern_action", terrain, grass_restore)
+			undo_redo.commit_action()
+
+			# Set vertex colors from preset's ground texture slot
+			_set_vertex_colors(selected_preset.ground_texture_slot)
+
+			var color_pattern := {}
+			var color_pattern_cc := {}
+			var color_restore := {}
+			var color_restore_cc := {}
+
+			for chunk_coords in pattern:
+				color_pattern[chunk_coords] = {}
+				color_pattern_cc[chunk_coords] = {}
+				color_restore[chunk_coords] = {}
+				color_restore_cc[chunk_coords] = {}
+				var chunk : MarchingSquaresTerrainChunk = terrain.chunks[chunk_coords]
+				for cell_coords in pattern[chunk_coords]:
+					color_restore[chunk_coords][cell_coords] = chunk.get_color_0(cell_coords)
+					color_restore_cc[chunk_coords][cell_coords] = chunk.get_color_1(cell_coords)
+					color_pattern[chunk_coords][cell_coords] = vertex_color_0
+					color_pattern_cc[chunk_coords][cell_coords] = vertex_color_1
+
+			undo_redo.create_action("preset ground texture")
+			undo_redo.add_do_method(self, "draw_color_0_pattern_action", terrain, color_pattern)
+			undo_redo.add_undo_method(self, "draw_color_0_pattern_action", terrain, color_restore)
+			undo_redo.commit_action()
+
+			undo_redo.create_action("preset ground texture cc")
+			undo_redo.add_do_method(self, "draw_color_1_pattern_action", terrain, color_pattern_cc)
+			undo_redo.add_undo_method(self, "draw_color_1_pattern_action", terrain, color_restore_cc)
 			undo_redo.commit_action()
 
 

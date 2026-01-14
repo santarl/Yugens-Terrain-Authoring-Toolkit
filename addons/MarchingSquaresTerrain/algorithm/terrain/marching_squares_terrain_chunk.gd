@@ -62,6 +62,20 @@ var ay : float
 var by : float
 var cy : float
 var dy : float
+# Cell height range for boundary detection (height-based color sampling)
+var cell_min_height : float
+var cell_max_height : float
+# Height-based material colors for FLOOR boundary cells (prevents color bleeding between heights)
+var cell_floor_lower_color_0 : Color
+var cell_floor_upper_color_0 : Color
+var cell_floor_lower_color_1 : Color
+var cell_floor_upper_color_1 : Color
+# Height-based material colors for WALL/RIDGE boundary cells
+var cell_wall_lower_color_0 : Color
+var cell_wall_upper_color_0 : Color
+var cell_wall_lower_color_1 : Color
+var cell_wall_upper_color_1 : Color
+var cell_is_boundary : bool = false
 # Edge connected state	
 var ab : bool
 var ac : bool
@@ -218,7 +232,64 @@ func generate_terrain_cells():
 			by = height_map[z][x+1] # top-right
 			cy = height_map[z+1][x] # bottom-left
 			dy = height_map[z+1][x+1] # bottom-right
-			
+
+			# Calculate cell height range for boundary detection (height-based color sampling)
+			cell_min_height = min(ay, by, cy, dy)
+			cell_max_height = max(ay, by, cy, dy)
+
+			# Determine if this is a boundary cell (significant height variation)
+			cell_is_boundary = (cell_max_height - cell_min_height) > merge_threshold
+
+			if cell_is_boundary:
+				# Identify corners at each height level for height-based color sampling
+				# FLOOR colors - from color_map (used for regular floor vertices)
+				var floor_corner_colors_0 = [
+					color_map_0[z * dimensions.x + x],           # A (top-left)
+					color_map_0[z * dimensions.x + x + 1],       # B (top-right)
+					color_map_0[(z + 1) * dimensions.x + x],     # C (bottom-left)
+					color_map_0[(z + 1) * dimensions.x + x + 1]  # D (bottom-right)
+				]
+				var floor_corner_colors_1 = [
+					color_map_1[z * dimensions.x + x],
+					color_map_1[z * dimensions.x + x + 1],
+					color_map_1[(z + 1) * dimensions.x + x],
+					color_map_1[(z + 1) * dimensions.x + x + 1]
+				]
+				# WALL colors - from wall_color_map (used for wall/ridge vertices)
+				var wall_corner_colors_0 = [
+					wall_color_map_0[z * dimensions.x + x],           # A (top-left)
+					wall_color_map_0[z * dimensions.x + x + 1],       # B (top-right)
+					wall_color_map_0[(z + 1) * dimensions.x + x],     # C (bottom-left)
+					wall_color_map_0[(z + 1) * dimensions.x + x + 1]  # D (bottom-right)
+				]
+				var wall_corner_colors_1 = [
+					wall_color_map_1[z * dimensions.x + x],
+					wall_color_map_1[z * dimensions.x + x + 1],
+					wall_color_map_1[(z + 1) * dimensions.x + x],
+					wall_color_map_1[(z + 1) * dimensions.x + x + 1]
+				]
+				var corner_heights = [ay, by, cy, dy]
+
+				# Find corners at min and max height
+				var min_idx = 0
+				var max_idx = 0
+				for i in range(4):
+					if corner_heights[i] < corner_heights[min_idx]:
+						min_idx = i
+					if corner_heights[i] > corner_heights[max_idx]:
+						max_idx = i
+
+				# Floor boundary colors (from ground color_map)
+				cell_floor_lower_color_0 = floor_corner_colors_0[min_idx]
+				cell_floor_upper_color_0 = floor_corner_colors_0[max_idx]
+				cell_floor_lower_color_1 = floor_corner_colors_1[min_idx]
+				cell_floor_upper_color_1 = floor_corner_colors_1[max_idx]
+				# Wall boundary colors (from wall_color_map)
+				cell_wall_lower_color_0 = wall_corner_colors_0[min_idx]
+				cell_wall_upper_color_0 = wall_corner_colors_0[max_idx]
+				cell_wall_lower_color_1 = wall_corner_colors_1[min_idx]
+				cell_wall_upper_color_1 = wall_corner_colors_1[max_idx]
+
 			# Track which edges shold be connected and not have a wall bewteen them.
 			ab = abs(ay-by) < merge_threshold # top edge
 			ac = abs(ay-cy) < merge_threshold # bottom edge
@@ -571,10 +642,17 @@ func add_point(x: float, y: float, z: float, uv_x: float = 0, uv_y: float = 0, d
 	var uv = Vector2(uv_x, uv_y) if floor_mode else Vector2(1, 1)
 	st.set_uv(uv)
 
-	# Select source color maps based on floor_mode
-	# Floor vertices use color_map_0/1, wall vertices use wall_color_map_0/1
-	var source_map_0 : PackedColorArray = color_map_0 if floor_mode else wall_color_map_0
-	var source_map_1 : PackedColorArray = color_map_1 if floor_mode else wall_color_map_1
+	# Detect ridge BEFORE selecting color maps (ridge needs wall colors, not ground colors)
+	var is_ridge := false
+	if floor_mode and terrain_system.use_ridge_texture:
+		is_ridge = (uv.y > 1.0 - terrain_system.ridge_threshold)
+
+	# Select source color maps based on floor_mode AND ridge detection
+	# Floor vertices use color_map_0/1
+	# Wall vertices AND ridge vertices use wall_color_map_0/1
+	var use_wall_colors := (not floor_mode) or is_ridge
+	var source_map_0 : PackedColorArray = wall_color_map_0 if use_wall_colors else color_map_0
+	var source_map_1 : PackedColorArray = wall_color_map_1 if use_wall_colors else color_map_1
 
 	# Use the minimum between both lerped diagonals, component-wise
 	# Will result in smoother diagonal paths
@@ -590,11 +668,30 @@ func add_point(x: float, y: float, z: float, uv_x: float = 0, uv_y: float = 0, d
 		if ad_color.g > 0.99 or bc_color.g > 0.99: color_0.g = 1.0;
 		if ad_color.b > 0.99 or bc_color.b > 0.99: color_0.b = 1.0;
 		if ad_color.a > 0.99 or bc_color.a > 0.99: color_0.a = 1.0;
+	elif cell_is_boundary:
+		# HEIGHT-BASED SAMPLING for ALL vertices in boundary cells
+		# This prevents color bleeding between different height levels
+		var height_range = cell_max_height - cell_min_height
+		var height_factor = clamp((y - cell_min_height) / height_range, 0.0, 1.0)
+
+		# Select appropriate color set based on vertex type (floor vs wall/ridge)
+		var lower_0: Color = cell_wall_lower_color_0 if use_wall_colors else cell_floor_lower_color_0
+		var upper_0: Color = cell_wall_upper_color_0 if use_wall_colors else cell_floor_upper_color_0
+
+		# Sharp bands: < 0.3 = lower color, > 0.7 = upper color, middle = blend
+		if height_factor < 0.3:
+			color_0 = lower_0
+		elif height_factor > 0.7:
+			color_0 = upper_0
+		else:
+			var blend_factor = (height_factor - 0.3) / 0.4
+			color_0 = lerp(lower_0, upper_0, blend_factor)
+		color_0 = get_dominant_color(color_0)
 	else:
 		var ab_color = lerp(source_map_0[cell_coords.y*dimensions.x + cell_coords.x], source_map_0[cell_coords.y*dimensions.x + cell_coords.x + 1], x)
 		var cd_color = lerp(source_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x], source_map_0[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], x)
-		# color_0 = get_dominant_color(lerp(ab_color, cd_color, z)) #Use this for mixed triangles
-		color_0 = source_map_0[cell_coords.y * dimensions.x + cell_coords.x] #Use this for perfect square tiles
+		color_0 = get_dominant_color(lerp(ab_color, cd_color, z)) #Use this for mixed triangles
+		# color_0 = source_map_0[cell_coords.y * dimensions.x + cell_coords.x] #Use this for perfect square tiles
 	st.set_color(color_0)
 
 	var color_1: Color
@@ -609,16 +706,33 @@ func add_point(x: float, y: float, z: float, uv_x: float = 0, uv_y: float = 0, d
 		if ad_color.g > 0.99 or bc_color.g > 0.99: color_1.g = 1.0;
 		if ad_color.b > 0.99 or bc_color.b > 0.99: color_1.b = 1.0;
 		if ad_color.a > 0.99 or bc_color.a > 0.99: color_1.a = 1.0;
+	elif cell_is_boundary:
+		# HEIGHT-BASED SAMPLING for ALL vertices in boundary cells
+		# This prevents color bleeding between different height levels
+		var height_range = cell_max_height - cell_min_height
+		var height_factor = clamp((y - cell_min_height) / height_range, 0.0, 1.0)
+
+		# Select appropriate color set based on vertex type (floor vs wall/ridge)
+		var lower_1: Color = cell_wall_lower_color_1 if use_wall_colors else cell_floor_lower_color_1
+		var upper_1: Color = cell_wall_upper_color_1 if use_wall_colors else cell_floor_upper_color_1
+
+		# Sharp bands: < 0.3 = lower color, > 0.7 = upper color, middle = blend
+		if height_factor < 0.3:
+			color_1 = lower_1
+		elif height_factor > 0.7:
+			color_1 = upper_1
+		else:
+			var blend_factor = (height_factor - 0.3) / 0.4
+			color_1 = lerp(lower_1, upper_1, blend_factor)
+		color_1 = get_dominant_color(color_1)
 	else:
 		var ab_color = lerp(source_map_1[cell_coords.y*dimensions.x + cell_coords.x], source_map_1[cell_coords.y*dimensions.x + cell_coords.x + 1], x)
 		var cd_color = lerp(source_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x], source_map_1[(cell_coords.y + 1)*dimensions.x + cell_coords.x + 1], x)
-		# color_1 = get_dominant_color(lerp(ab_color, cd_color, z)) #Use this for mixed triangles
-		color_1 = source_map_1[cell_coords.y * dimensions.x + cell_coords.x] #Use this for perfect square tiles
+		color_1 = get_dominant_color(lerp(ab_color, cd_color, z)) #Use this for mixed triangles
+		# color_1 = source_map_1[cell_coords.y * dimensions.x + cell_coords.x] #Use this for perfect square tiles
 	st.set_custom(0, color_1)
-	
-	var is_ridge := false
-	if floor_mode and terrain_system.use_ridge_texture:
-		is_ridge = (uv.y > 1.0 - terrain_system.ridge_threshold)
+
+	# is_ridge already calculated above (before color source selection)
 	var g_mask: Color = grass_mask_map[cell_coords.y*dimensions.x + cell_coords.x]
 	g_mask.g = 1.0 if is_ridge else 0.0
 	st.set_custom(1, g_mask)
