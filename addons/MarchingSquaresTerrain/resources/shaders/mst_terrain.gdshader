@@ -77,6 +77,7 @@ varying vec4 vc_color_1;
 // Phantom fix: Per-cell material indices (flat = no GPU interpolation)
 varying flat vec2 mat_indices;
 varying float mat_blend_weight;
+varying float use_vertex_colors; // Flag: 1.0 = use vertex colors (boundary cells), 0.0 = use phantom fix
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -289,9 +290,10 @@ void vertex() {
 	vc_color_0 = COLOR;
 	vc_color_1 = CUSTOM0;
 
-	// CUSTOM2 contains per-cell material blend data: (mat_a/15, mat_b/15, blend_weight, 0)
+	// CUSTOM2 contains per-cell material blend data: (mat_a/15, mat_b/15, blend_weight, use_vc_flag)
 	mat_indices = vec2(CUSTOM2.r, CUSTOM2.g);
 	mat_blend_weight = CUSTOM2.b;
+	use_vertex_colors = CUSTOM2.a; // 1.0 = boundary cell (use vertex colors), 0.0 = flat cell (use phantom fix)
 }
 
 // ============================================================================
@@ -308,14 +310,29 @@ void fragment() {
 		vec2 floor_uv = UV2 * tiling_factor_floor;
 		vec4 floor_color;
 
-		//Hard edges mode keeps original behaviour 
+		//Hard edges mode keeps original behaviour
 		if (use_hard_square_edges) {
 			floor_color = sample_material_by_index(material_index, floor_uv);
 		}
-		
-		//Soft Blend mode applicable when we have triangles - PHANTOM FIX
+		// Boundary cells: use vertex colors (respects height-adjusted colors, no cross-height bleeding)
+		else if (use_vertex_colors > 0.5) {
+			float weights[16];
+			float effective_sharpness = blend_sharpness;
+			if (blend_noise_strength > 0.0) {
+				float n = noise(world_pos.xz * blend_noise_scale);
+				effective_sharpness = mix(blend_sharpness, blend_sharpness * (0.5 + n), blend_noise_strength);
+			}
+			calculate_blend_weights(vc_color_0, vc_color_1, effective_sharpness, weights);
+
+			floor_color = vec4(0.0);
+			for (int i = 0; i < 16; i++) {
+				if (weights[i] > 0.01) {
+					floor_color += sample_material_by_index(i, floor_uv) * weights[i];
+				}
+			}
+		}
+		// Flat cells: PHANTOM FIX using per-cell material indices (prevents phantom 3rd texture)
 		else {
-			// PHANTOM FIX: Use per-cell material indices (flat = no interpolation)
 			int mat_a = int(round(mat_indices.x * 15.0));
 			int mat_b = int(round(mat_indices.y * 15.0));
 			float blend_weight = mat_blend_weight;

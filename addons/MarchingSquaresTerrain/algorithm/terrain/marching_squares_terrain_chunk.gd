@@ -757,8 +757,14 @@ func add_point(x: float, y: float, z: float, uv_x: float = 0, uv_y: float = 0, d
 	g_mask.g = 1.0 if is_ridge else 0.0
 	st.set_custom(1, g_mask)
 
-	# CUSTOM2: Material blend data for phantom fix
+	# CUSTOM2: Material blend data for phantom fix (R=mat_a, G=mat_b, B=blend_weight, A=use_vertex_colors_flag)
 	var mat_blend : Color = calculate_material_blend_data(x, z, source_map_0, source_map_1)
+	# For boundary floor cells: tell shader to use vertex colors (height-adjusted) instead of phantom fix
+	# This prevents height bleeding while keeping correct texture at height transitions
+	if cell_is_boundary and floor_mode:
+		mat_blend.a = 1.0  # Use vertex colors (OLD behavior)
+	else:
+		mat_blend.a = 0.0  # Use phantom fix (prevents phantom 3rd texture on flat cells)
 	st.set_custom(2, mat_blend)
 
 	var vert = Vector3((cell_coords.x+x) * cell_size.x, y, (cell_coords.y+z) * cell_size.y)
