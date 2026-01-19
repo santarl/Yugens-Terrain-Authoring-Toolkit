@@ -217,8 +217,9 @@ func generate_grass_on_cell(cell_coords: Vector2i) -> void:
 						var uv_x = clamp(p.x / (terrain_system.dimensions.x * terrain_system.cell_size.x), 0.0, 1.0) 
 						var uv_y = clamp(p.z / (terrain_system.dimensions.z * terrain_system.cell_size.y), 0.0, 1.0)
 						
-						var px = int(uv_x * terrain_image.get_width() - 1)
-						var py = int(uv_y * terrain_image.get_height() - 1)
+						#Believe this might fix the Grass Color bug (part 2)
+						var px = int(uv_x * (terrain_image.get_width() - 1))
+						var py = int(uv_y * (terrain_image.get_height() - 1))
 						
 						instance_color = terrain_image.get_pixelv(Vector2(px, py))
 					match texture_id:

@@ -19,7 +19,8 @@ const MERGE_MODE = {
 	set(mode):
 		merge_mode = mode
 		if is_inside_tree():
-			var grass_mat := grass_planter.multimesh.mesh.surface_get_material(0) as ShaderMaterial
+			#Believe this might fix the Grass Color bug (part 1)
+			var grass_mat :ShaderMaterial= grass_planter.multimesh.mesh.material as ShaderMaterial
 			if mode == Mode.SEMI_ROUND or Mode.SPHERICAL:
 				grass_mat.set_shader_parameter("is_merge_round", true)
 			else:
