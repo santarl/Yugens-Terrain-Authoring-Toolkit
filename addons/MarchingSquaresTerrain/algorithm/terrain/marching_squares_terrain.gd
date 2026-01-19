@@ -24,7 +24,7 @@ class_name MarchingSquaresTerrain
 		for chunk: MarchingSquaresTerrainChunk in chunks.values():
 			chunk.grass_planter.regenerate_all_cells()
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var noise_hmap : Noise # used to generate smooth initial heights for more natrual looking terrain. if null, initial terrain will be flat
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var ground_texture : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_terrain_noise.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var ground_texture : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_terrain_noise.res"):
 	set(value):
 		ground_texture = value
 		if not is_batch_updating:
@@ -36,32 +36,32 @@ class_name MarchingSquaresTerrain
 				grass_mat.set_shader_parameter("use_base_color", true)
 			for chunk: MarchingSquaresTerrainChunk in chunks.values():
 				chunk.grass_planter.regenerate_all_cells()
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/wall_noise_texture.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/wall_noise_texture.res"):
 	set(value):
 		wall_texture = value
 		if not is_batch_updating:
 			terrain_material.set_shader_parameter("wall_tex_1", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_2 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/wall_noise_texture.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_2 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/wall_noise_texture.res"):
 	set(value):
 		wall_texture_2 = value
 		if not is_batch_updating:
 						terrain_material.set_shader_parameter("wall_tex_2", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_3 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/wall_noise_texture.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_3 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/wall_noise_texture.res"):
 	set(value):
 		wall_texture_3 = value
 		if not is_batch_updating:
 			terrain_material.set_shader_parameter("wall_tex_3", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_4 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/wall_noise_texture.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_4 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/wall_noise_texture.res"):
 	set(value):
 		wall_texture_4 = value
 		if not is_batch_updating:
 			terrain_material.set_shader_parameter("wall_tex_4", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_5 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/wall_noise_texture.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_5 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/wall_noise_texture.res"):
 	set(value):
 		wall_texture_5 = value
 		if not is_batch_updating:
 			terrain_material.set_shader_parameter("wall_tex_5", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_6 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/wall_noise_texture.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var wall_texture_6 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/wall_noise_texture.res"):
 	set(value):
 		wall_texture_6 = value
 		if not is_batch_updating:	
@@ -105,7 +105,7 @@ class_name MarchingSquaresTerrain
 			terrain_material.set_shader_parameter("wall_albedo_6", value)
 
 # Base grass settings
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_leaf_sprite.png"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_leaf_sprite.png"):
 	set(value):
 		grass_sprite = value
 		if not is_batch_updating:
@@ -145,7 +145,7 @@ class_name MarchingSquaresTerrain
 			chunk.regenerate_all_cells()
 
 # Vertex painting texture settings
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_2 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_terrain_noise.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_2 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_terrain_noise.res"):
 	set(value):
 		texture_2 = value
 		if not is_batch_updating:
@@ -157,7 +157,7 @@ class_name MarchingSquaresTerrain
 				grass_mat.set_shader_parameter("use_base_color_2", true)
 			for chunk: MarchingSquaresTerrainChunk in chunks.values():
 				chunk.grass_planter.regenerate_all_cells()
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_3 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_terrain_noise.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_3 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_terrain_noise.res"):
 	set(value):
 		texture_3 = value
 		if not is_batch_updating:
@@ -169,7 +169,7 @@ class_name MarchingSquaresTerrain
 				grass_mat.set_shader_parameter("use_base_color_3", true)
 			for chunk: MarchingSquaresTerrainChunk in chunks.values():
 				chunk.grass_planter.regenerate_all_cells()
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_4 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_terrain_noise.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_4 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_terrain_noise.res"):
 	set(value):
 		texture_4 = value
 		if not is_batch_updating:
@@ -181,7 +181,7 @@ class_name MarchingSquaresTerrain
 				grass_mat.set_shader_parameter("use_base_color_4", true)
 			for chunk: MarchingSquaresTerrainChunk in chunks.values():
 				chunk.grass_planter.regenerate_all_cells()
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_5 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_terrain_noise.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_5 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_terrain_noise.res"):
 	set(value):
 		texture_5 = value
 		if not is_batch_updating:
@@ -193,7 +193,7 @@ class_name MarchingSquaresTerrain
 				grass_mat.set_shader_parameter("use_base_color_5", true)
 			for chunk: MarchingSquaresTerrainChunk in chunks.values():
 				chunk.grass_planter.regenerate_all_cells()
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_6 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_terrain_noise.res"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var texture_6 : Texture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_terrain_noise.res"):
 	set(value):
 		texture_6 = value
 		if not is_batch_updating:
@@ -298,31 +298,31 @@ class_name MarchingSquaresTerrain
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("use_grass_tex_6", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_2 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_leaf_sprite.png"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_2 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_leaf_sprite.png"):
 	set(value):
 		grass_sprite_tex_2 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_2", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_3 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_leaf_sprite.png"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_3 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_leaf_sprite.png"):
 	set(value):
 		grass_sprite_tex_3 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_3", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_4 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_leaf_sprite.png"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_4 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_leaf_sprite.png"):
 	set(value):
 		grass_sprite_tex_4 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_4", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_5 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_leaf_sprite.png"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_5 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_leaf_sprite.png"):
 	set(value):
 		grass_sprite_tex_5 = value
 		if not is_batch_updating:
 			var grass_mat := grass_mesh.material as ShaderMaterial
 			grass_mat.set_shader_parameter("grass_texture_5", value)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_6 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/materials/grass_leaf_sprite.png"):
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var grass_sprite_tex_6 : CompressedTexture2D = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_leaf_sprite.png"):
 	set(value):
 		grass_sprite_tex_6 = value
 		if not is_batch_updating:
@@ -366,8 +366,8 @@ class_name MarchingSquaresTerrain
 
 @export_storage var current_terrain_preset: MarchingSquaresTexturePreset = null
 
-var void_texture := preload("res://addons/MarchingSquaresTerrain/resources/materials/void_texture.tres")
-var placeholder_wind_texture := preload("res://addons/MarchingSquaresTerrain/resources/materials/wind_noise_texture.tres") # Change to your own texture
+var void_texture := preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/void_texture.tres")
+var placeholder_wind_texture := preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/wind_noise_texture.tres") # Change to your own texture
 
 var terrain_material : ShaderMaterial = null
 var grass_mesh : QuadMesh = null 
@@ -380,8 +380,8 @@ var chunks : Dictionary = {}
 func _init() -> void:
 	# Create unique copies of shared resources for this node instance
 	# This prevents texture/material changes from affecting other MarchingSquaresTerrain nodes
-	terrain_material = preload("res://addons/MarchingSquaresTerrain/resources/materials/mst_terrain_shader.tres").duplicate(true)
-	var base_grass_mesh := preload("res://addons/MarchingSquaresTerrain/resources/materials/mst_grass_mesh.tres")
+	terrain_material = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/mst_terrain_shader.tres").duplicate(true)
+	var base_grass_mesh := preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/mst_grass_mesh.tres")
 	grass_mesh = base_grass_mesh.duplicate(true)
 	grass_mesh.material = base_grass_mesh.material.duplicate(true)
 
@@ -617,7 +617,7 @@ func force_batch_update() -> void:
 # Called by marching_squares_ui.gd when saving monitoring settings changes
 func save_to_preset() -> void:
 	if current_terrain_preset == null:
-		printerr("ERROR: Cannot save to preset -> no preset resource assigned to terrain system")
+		# Don't print an error here as not having a preset just means the user is making a new one
 		return
 	
 	# Floor textures

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cxvnfgy865wsk"
-path.s3tc="res://.godot/imported/grass_leaf_sprite.png-da42aaebca2aacf3f07cf4ecb224aec4.s3tc.ctex"
+uid="uid://bp60csbiqw4oe"
+path.s3tc="res://.godot/imported/Brick_Wall_Cracked_64x64.png-2873ce48df88b07e343328f9919b9bd2.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/MarchingSquaresTerrain/resources/materials/grass_leaf_sprite.png"
-dest_files=["res://.godot/imported/grass_leaf_sprite.png-da42aaebca2aacf3f07cf4ecb224aec4.s3tc.ctex"]
+source_file="res://addons/MarchingSquaresTerrain/resources/user textures/Brick_Wall_Cracked_64x64.png"
+dest_files=["res://.godot/imported/Brick_Wall_Cracked_64x64.png-2873ce48df88b07e343328f9919b9bd2.s3tc.ctex"]
 
 [params]
 

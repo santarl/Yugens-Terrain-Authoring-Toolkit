@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_lpip8")
-paint_name = "Global_NoGrass"
+paint_name = "Base Grass Masked"
 has_grass = false
 wall_texture_slot = 0
 ground_texture_slot = 0

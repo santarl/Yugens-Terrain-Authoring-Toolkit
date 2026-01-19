@@ -31,13 +31,13 @@ enum TerrainToolMode {
 }
 
 var BrushMode : Dictionary = {
-	"0" = preload("res://addons/MarchingSquaresTerrain/resources/materials/round_brush_radius_visual.tres"),
-	"1" = preload("res://addons/MarchingSquaresTerrain/resources/materials/square_brush_radius_visual.tres"),
+	"0" = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/round_brush_radius_visual.tres"),
+	"1" = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/square_brush_radius_visual.tres"),
 }
 
 var BrushMat : Dictionary = {
-	"0" = preload("res://addons/MarchingSquaresTerrain/resources/materials/round_brush_radius_material.tres"),
-	"1" = preload("res://addons/MarchingSquaresTerrain/resources/materials/square_brush_radius_material.tres"),
+	"0" = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/round_brush_radius_material.tres"),
+	"1" = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/square_brush_radius_material.tres"),
 }
 
 var mode : TerrainToolMode = TerrainToolMode.BRUSH:
@@ -109,10 +109,10 @@ var bridge_start_pos : Vector3
 # The point where the height drag started
 var base_position : Vector3
 
-const BRUSH_VISUAL : Mesh = preload("res://addons/MarchingSquaresTerrain/resources/materials/brush_visual.tres")
-var BRUSH_RADIUS_VISUAL : Mesh = preload("res://addons/MarchingSquaresTerrain/resources/materials/round_brush_radius_visual.tres")
-var BRUSH_RADIUS_MATERIAL : ShaderMaterial = preload("res://addons/MarchingSquaresTerrain/resources/materials/round_brush_radius_material.tres")
-@onready var falloff_curve : Curve = preload("res://addons/MarchingSquaresTerrain/resources/materials/curve_falloff.tres")
+const BRUSH_VISUAL : Mesh = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/brush_visual.tres")
+var BRUSH_RADIUS_VISUAL : Mesh = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/round_brush_radius_visual.tres")
+var BRUSH_RADIUS_MATERIAL : ShaderMaterial = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/round_brush_radius_material.tres")
+@onready var falloff_curve : Curve = preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/curve_falloff.tres")
 
 
 func _enter_tree():

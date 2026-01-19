@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drx2jv4ifooke"
-path.s3tc="res://.godot/imported/Soil_1.png-98c448c827cf6a4470f932d93d7b47d3.s3tc.ctex"
+uid="uid://cxml760dk2bjv"
+path.s3tc="res://.godot/imported/Cobblestones_01_Grey_1.png-a29141d570558582b358ba62a48df1bb.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/MarchingSquaresTerrain/resources/test textures/Soil_1.png"
-dest_files=["res://.godot/imported/Soil_1.png-98c448c827cf6a4470f932d93d7b47d3.s3tc.ctex"]
+source_file="res://addons/MarchingSquaresTerrain/resources/user textures/Cobblestones_01_Grey_1.png"
+dest_files=["res://.godot/imported/Cobblestones_01_Grey_1.png-a29141d570558582b358ba62a48df1bb.s3tc.ctex"]
 
 [params]
 

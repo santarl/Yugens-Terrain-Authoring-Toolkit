@@ -19,12 +19,12 @@ uniform vec4 wall_albedo_6 : source_color = vec4(0.42, 0.38, 0.30, 1.0);
 group_uniforms;
 
 group_uniforms Wall_Textures;
-uniform sampler2D wall_tex_1 : source_color, repeat_enable;
-uniform sampler2D wall_tex_2 : source_color, repeat_enable;
-uniform sampler2D wall_tex_3 : source_color, repeat_enable;
-uniform sampler2D wall_tex_4 : source_color, repeat_enable;
-uniform sampler2D wall_tex_5 : source_color, repeat_enable;
-uniform sampler2D wall_tex_6 : source_color, repeat_enable;
+uniform sampler2D wall_tex_1 : source_color, repeat_enable, filter_nearest;
+uniform sampler2D wall_tex_2 : source_color, repeat_enable, filter_nearest;
+uniform sampler2D wall_tex_3 : source_color, repeat_enable, filter_nearest;
+uniform sampler2D wall_tex_4 : source_color, repeat_enable, filter_nearest;
+uniform sampler2D wall_tex_5 : source_color, repeat_enable, filter_nearest;
+uniform sampler2D wall_tex_6 : source_color, repeat_enable, filter_nearest;
 group_uniforms;
 
 group_uniforms Blending;
@@ -38,22 +38,22 @@ group_uniforms;
 
 
 group_uniforms Vertex_Colors;
-uniform sampler2D vc_tex_rr : source_color;
-uniform sampler2D vc_tex_rg : source_color;
-uniform sampler2D vc_tex_rb : source_color;
-uniform sampler2D vc_tex_ra : source_color;
-uniform sampler2D vc_tex_gr : source_color;
-uniform sampler2D vc_tex_gg : source_color;
-uniform sampler2D vc_tex_gb : source_color;
-uniform sampler2D vc_tex_ga : source_color;
-uniform sampler2D vc_tex_br : source_color;
-uniform sampler2D vc_tex_bg : source_color;
-uniform sampler2D vc_tex_bb : source_color;
-uniform sampler2D vc_tex_ba : source_color;
-uniform sampler2D vc_tex_ar : source_color;
-uniform sampler2D vc_tex_ag : source_color;
-uniform sampler2D vc_tex_ab : source_color;
-uniform sampler2D vc_tex_aa : source_color;
+uniform sampler2D vc_tex_rr : source_color, filter_nearest;
+uniform sampler2D vc_tex_rg : source_color, filter_nearest;
+uniform sampler2D vc_tex_rb : source_color, filter_nearest;
+uniform sampler2D vc_tex_ra : source_color, filter_nearest;
+uniform sampler2D vc_tex_gr : source_color, filter_nearest;
+uniform sampler2D vc_tex_gg : source_color, filter_nearest;
+uniform sampler2D vc_tex_gb : source_color, filter_nearest;
+uniform sampler2D vc_tex_ga : source_color, filter_nearest;
+uniform sampler2D vc_tex_br : source_color, filter_nearest;
+uniform sampler2D vc_tex_bg : source_color, filter_nearest;
+uniform sampler2D vc_tex_bb : source_color, filter_nearest;
+uniform sampler2D vc_tex_ba : source_color, filter_nearest;
+uniform sampler2D vc_tex_ar : source_color, filter_nearest;
+uniform sampler2D vc_tex_ag : source_color, filter_nearest;
+uniform sampler2D vc_tex_ab : source_color, filter_nearest;
+uniform sampler2D vc_tex_aa : source_color, filter_nearest;
 group_uniforms;
 
 group_uniforms Shading;

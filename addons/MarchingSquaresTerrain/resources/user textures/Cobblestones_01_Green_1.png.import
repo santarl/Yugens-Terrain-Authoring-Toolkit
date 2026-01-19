@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qxf105jxg361"
-path.s3tc="res://.godot/imported/Cobblestones_01_Green_1.png-18f2dea2df48958cb4c0d86743a9e329.s3tc.ctex"
+path.s3tc="res://.godot/imported/Cobblestones_01_Green_1.png-fa5601f266e678c64733e822894756b6.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/MarchingSquaresTerrain/resources/test textures/Cobblestones_01_Green_1.png"
-dest_files=["res://.godot/imported/Cobblestones_01_Green_1.png-18f2dea2df48958cb4c0d86743a9e329.s3tc.ctex"]
+source_file="res://addons/MarchingSquaresTerrain/resources/user textures/Cobblestones_01_Green_1.png"
+dest_files=["res://.godot/imported/Cobblestones_01_Green_1.png-fa5601f266e678c64733e822894756b6.s3tc.ctex"]
 
 [params]
 

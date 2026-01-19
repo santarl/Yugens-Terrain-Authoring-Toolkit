@@ -139,7 +139,7 @@ func _exit_tree() -> void:
 	if not _skip_save_on_exit:
 		# Guard get_tree() - can be null during multi-scene transitions
 		var tree = get_tree()
-		if tree and tree.current_scene:
+		if tree and tree.current_scene and Engine.is_editor_hint():
 			var scene = tree.current_scene
 			ResourceSaver.save(mesh, "res://"+scene.name+"/"+name+".tres", ResourceSaver.FLAG_COMPRESS)
 

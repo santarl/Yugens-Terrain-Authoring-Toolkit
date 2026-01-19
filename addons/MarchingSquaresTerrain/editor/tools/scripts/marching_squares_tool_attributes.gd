@@ -1,5 +1,5 @@
 @tool
-extends HFlowContainer
+extends ScrollContainer
 class_name MarchingSquaresToolAttributes
 
 
@@ -44,14 +44,21 @@ var settings : Dictionary = {}
 var last_setting_type : SettingType = SettingType.ERROR
 var selected_chunk : MarchingSquaresTerrainChunk
 
+var hbox_container
+
 
 func _ready() -> void:
-	set_custom_minimum_size(Vector2(0, 35))
+	set_custom_minimum_size(Vector2(0, 45))
 	add_theme_constant_override("separation", 5)
+	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 
 
 func show_tool_attributes(tool_index: int) -> void:
-	set_custom_minimum_size(Vector2(0, 35))
+	hbox_container = HBoxContainer.new()
+	hbox_container.add_theme_constant_override("separation", 5)
+	hbox_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox_container.size_flags_vertical = Control.SIZE_FILL
 	
 	if not visible:
 		return
@@ -112,6 +119,7 @@ func show_tool_attributes(tool_index: int) -> void:
 			setting_dict["type"] = type_map.get(setting_dict["type"], SettingType.ERROR)
 		add_setting(setting_dict)
 	
+	add_child(hbox_container)
 	last_setting_type = SettingType.ERROR # Reset the setting type for correct VSeparators
 
 
@@ -124,7 +132,7 @@ func add_setting(p_params: Dictionary) -> void:
 		if last_setting_type == SettingType.SLIDER and setting_type == SettingType.SLIDER:
 			pass
 		elif last_setting_type != setting_type:
-			add_child(VSeparator.new())
+			hbox_container.add_child(VSeparator.new())
 	
 	var add_label := true
 	if setting_type == SettingType.CHUNK or setting_type == SettingType.TERRAIN:
@@ -138,7 +146,7 @@ func add_setting(p_params: Dictionary) -> void:
 		var c_cont := CenterContainer.new()
 		c_cont.set_custom_minimum_size(Vector2(50, 35))
 		c_cont.add_child(label, true)
-		add_child(c_cont, true)
+		hbox_container.add_child(c_cont, true)
 	
 	var cont
 	var saved_setting_value = _get_setting_value(setting_name)
@@ -155,7 +163,7 @@ func add_setting(p_params: Dictionary) -> void:
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(35, 35))
 			cont.add_child(checkbox, true)
-			add_child(cont, true)
+			hbox_container.add_child(cont, true)
 		SettingType.SLIDER:
 			var range_data = p_params.get("range", Vector3(1.0, 50.0, 0.5))
 			var range_min = range_data.x
@@ -193,7 +201,7 @@ func add_setting(p_params: Dictionary) -> void:
 				cont.add_theme_constant_override("margin_right", 10)
 				cont.add_theme_constant_override("margin_left", -3)
 				cont.add_child(hslider, true)
-			add_child(cont, true)
+			hbox_container.add_child(cont, true)
 		SettingType.OPTION:
 			var options : Array = p_params.get("options", [])
 			var option_button := OptionButton.new()
@@ -211,7 +219,7 @@ func add_setting(p_params: Dictionary) -> void:
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(65, 35))
 			cont.add_child(option_button, true)
-			add_child(cont, true)
+			hbox_container.add_child(cont, true)
 		SettingType.TEXT:
 			var line_edit := LineEdit.new()
 			line_edit.set_flat(true)
@@ -224,7 +232,7 @@ func add_setting(p_params: Dictionary) -> void:
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(35, 35))
 			cont.add_child(line_edit, true)
-			add_child(cont, true)
+			hbox_container.add_child(cont, true)
 		SettingType.PRESET:
 			var preset_button := OptionButton.new()
 			var dir : DirAccess
@@ -267,7 +275,7 @@ func add_setting(p_params: Dictionary) -> void:
 				cont = CenterContainer.new()
 				cont.set_custom_minimum_size(Vector2(100, 35))
 				cont.add_child(preset_button, true)
-				add_child(cont, true)
+				hbox_container.add_child(cont, true)
 			else: # Can be used for e.g. terrain settings presets in the future
 				pass 
 		SettingType.QUICK_PAINT:
@@ -321,7 +329,7 @@ func add_setting(p_params: Dictionary) -> void:
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(100, 35))
 			cont.add_child(quick_paint_button, true)
-			add_child(cont, true)
+			hbox_container.add_child(cont, true)
 		SettingType.CHUNK:
 			if plugin.current_terrain_node.get_child_count() == 0:
 				return
@@ -348,15 +356,15 @@ func add_setting(p_params: Dictionary) -> void:
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(65, 35))
 			cont.add_child(chunk_button, true)
-			add_child(cont, true)
+			hbox_container.add_child(cont, true)
 			
 			var v_sep := VSeparator.new()
-			add_child(v_sep, true)
+			hbox_container.add_child(v_sep, true)
 			
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(65, 35))
 			cont.add_child(option_button, true)
-			add_child(cont, true)
+			hbox_container.add_child(cont, true)
 		SettingType.TERRAIN:
 			var vbox := VBoxContainer.new()
 			for setting in terrain_settings_data:
@@ -466,11 +474,11 @@ func add_setting(p_params: Dictionary) -> void:
 						hbox.add_child(ts_cont, true)
 						vbox.add_child(hbox, true)
 				if vbox.get_child_count() % 3 == 0:
-					add_child(vbox)
-					add_child(VSeparator.new())
+					hbox_container.add_child(vbox)
+					hbox_container.add_child(VSeparator.new())
 					vbox = VBoxContainer.new()
 			if vbox.get_child_count() > 0:
-				add_child(vbox)
+				hbox_container.add_child(vbox)
 		SettingType.ERROR: # Fallback
 			printerr("ERROR: [MarchingSquaresToolAttributes] couldn't load tool attributes setting")
 	

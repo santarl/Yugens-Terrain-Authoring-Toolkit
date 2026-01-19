@@ -81,19 +81,15 @@ const WALL_VAR_NAMES : Array[Dictionary] = [
 	{ "tex_var": "wall_texture_6", "color_var": "wall_color_6" },
 ]
 
-var vflow_container
-
 
 func _ready() -> void:
 	set_custom_minimum_size(Vector2(165, 0))
 	add_theme_constant_override("separation", 5)
 	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 
 
 func add_texture_settings() -> void:
-	if not vflow_container:
-		vflow_container = VFlowContainer.new()
-	
 	for child in get_children():
 		child.queue_free()
 	
@@ -101,7 +97,6 @@ func add_texture_settings() -> void:
 	
 	var terrain := plugin.current_terrain_node
 	
-	vflow_container.alignment = FlowContainer.ALIGNMENT_BEGIN
 	var vbox = VBoxContainer.new()
 	vbox.set_custom_minimum_size(Vector2(150, 0))
 	for i in range(15):

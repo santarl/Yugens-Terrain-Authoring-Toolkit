@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ck7mto1uqhcsn"
-path.s3tc="res://.godot/imported/Dirt_Cracked_02_Yellow_1.png-dd798051dada34f669909778fd3979bd.s3tc.ctex"
+uid="uid://dgne8ynx4f4jj"
+path.s3tc="res://.godot/imported/Snow_02_White_1.png-fcb48e780016cd86624b4db14544d12e.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/MarchingSquaresTerrain/resources/test textures/Dirt_Cracked_02_Yellow_1.png"
-dest_files=["res://.godot/imported/Dirt_Cracked_02_Yellow_1.png-dd798051dada34f669909778fd3979bd.s3tc.ctex"]
+source_file="res://addons/MarchingSquaresTerrain/resources/user textures/Snow_02_White_1.png"
+dest_files=["res://.godot/imported/Snow_02_White_1.png-fcb48e780016cd86624b4db14544d12e.s3tc.ctex"]
 
 [params]
 

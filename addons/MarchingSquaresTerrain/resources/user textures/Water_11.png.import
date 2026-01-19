@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bi172ltfvl75x"
-path.s3tc="res://.godot/imported/ice_1.png-a7e0efc9dc60933490c712f31b07092c.s3tc.ctex"
+uid="uid://chwdgsfwrgw8t"
+path.s3tc="res://.godot/imported/Water_11.png-0ddb8d50fdf782173df2c9e85b2858e9.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/MarchingSquaresTerrain/resources/test textures/ice_1.png"
-dest_files=["res://.godot/imported/ice_1.png-a7e0efc9dc60933490c712f31b07092c.s3tc.ctex"]
+source_file="res://addons/MarchingSquaresTerrain/resources/user textures/Water_11.png"
+dest_files=["res://.godot/imported/Water_11.png-0ddb8d50fdf782173df2c9e85b2858e9.s3tc.ctex"]
 
 [params]
 
