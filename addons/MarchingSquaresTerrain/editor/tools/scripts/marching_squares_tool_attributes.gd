@@ -8,7 +8,9 @@ signal terrain_setting_changed(setting: String, value: Variant)
 
 enum SettingType {
 	CHECKBOX,
+	MULTI_CHECKBOX,
 	SLIDER,
+	NODE_PICKER,
 	OPTION,
 	TEXT,
 	CHUNK,
@@ -49,25 +51,27 @@ func show_tool_attributes(tool_index: int) -> void:
 	
 	if not visible:
 		return
-	
+
 	for child in get_children():
 		child.queue_free()
 	settings.clear()
-	
+
 	if not plugin.toolbar.toolbox:
 		return
-	
+
 	var tool = plugin.toolbar.toolbox.tools.get(tool_index)
 	var tool_attributes : MarchingSquaresToolAttributeSettings = tool.get("attributes")
 	var type_map = {
 		"slider": SettingType.SLIDER,
 		"checkbox": SettingType.CHECKBOX,
+		"multi_checkbox": SettingType.MULTI_CHECKBOX,
+		"node_picker": SettingType.NODE_PICKER,
 		"option": SettingType.OPTION,
 		"text": SettingType.TEXT,
 		"chunk": SettingType.CHUNK,
 		"terrain": SettingType.TERRAIN,
 	}
-	
+
 	var new_attributes := []
 	if tool_attributes.brush_type:
 		new_attributes.append(attribute_list.brush_type)
@@ -85,10 +89,10 @@ func show_tool_attributes(tool_index: int) -> void:
 		new_attributes.append(attribute_list.falloff)
 	if tool_attributes.mask_mode:
 		new_attributes.append(attribute_list.mask_mode)
-	if tool_attributes.symmetry_x:
-		new_attributes.append(attribute_list.symmetry_x)
-	if tool_attributes.symmetry_z:
-		new_attributes.append(attribute_list.symmetry_z)
+	if tool_attributes.symmetry_x or tool_attributes.symmetry_z:
+		new_attributes.append(attribute_list.symmetry)
+	if tool_attributes.symmetry_pivot:
+		new_attributes.append(attribute_list.symmetry_pivot)
 	if tool_attributes.material:
 		new_attributes.append(attribute_list.material)
 	if tool_attributes.texture_name:
@@ -97,13 +101,13 @@ func show_tool_attributes(tool_index: int) -> void:
 		new_attributes.append(attribute_list.chunk_management)
 	if tool_attributes.terrain_settings:
 		new_attributes.append(attribute_list.terrain_settings)
-	
+
 	for attribute in new_attributes:
-		var setting_dict : Dictionary = attribute
+		var setting_dict : Dictionary = attribute.duplicate()
 		if setting_dict.has("type") and setting_dict["type"] is String:
-			setting_dict["type"] = type_map.get(setting_dict["type"], SettingType.ERROR)
+			setting_dict["type"] = type_map.get(setting_dict["type"], SettingType.ERROR)	
 		add_setting(setting_dict)
-	
+
 	last_setting_type = SettingType.ERROR # Reset the setting type for correct VSeparators
 
 
@@ -111,7 +115,6 @@ func add_setting(p_params: Dictionary) -> void:
 	var setting_name : String = p_params.get("name", "")
 	var setting_type : SettingType = p_params.get("type", SettingType.ERROR)
 	var label_text : String = p_params.get("label", setting_name)
-	
 	if last_setting_type != SettingType.ERROR:
 		if last_setting_type == SettingType.SLIDER and setting_type == SettingType.SLIDER:
 			pass
@@ -147,6 +150,70 @@ func add_setting(p_params: Dictionary) -> void:
 			cont = CenterContainer.new()
 			cont.set_custom_minimum_size(Vector2(35, 35))
 			cont.add_child(checkbox, true)
+			add_child(cont, true)
+		SettingType.MULTI_CHECKBOX:
+			var flags: Array = p_params.get("flags", [])
+			var hbox := HBoxContainer.new()
+			hbox.add_theme_constant_override("separation", 10)
+			
+			for flag in flags:
+				var flag_label = flag.get("label", "Flag")
+				var flag_name = flag.get("name", "")
+				var flag_default = flag.get("default", false)
+				
+				var checkbox := CheckBox.new()
+				checkbox.text = flag_label
+				checkbox.set_flat(true)
+				
+				var s_val = _get_setting_value(flag_name)
+				if s_val is not String and str(s_val) != "ERROR":
+					checkbox.button_pressed = s_val
+				else:
+					checkbox.button_pressed = flag_default
+				
+				checkbox.toggled.connect(func(pressed): _on_setting_changed(flag_name, pressed))
+				hbox.add_child(checkbox)
+			
+			cont = CenterContainer.new()
+			cont.set_custom_minimum_size(Vector2(35, 35))
+			cont.add_child(hbox, true)
+			add_child(cont, true)
+		SettingType.NODE_PICKER:
+			var path_label := Label.new()
+			path_label.text = "None"
+			path_label.clip_text = true
+			path_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			
+			var saved_val = _get_setting_value(setting_name)
+			if saved_val is NodePath and not saved_val.is_empty():
+				path_label.text = str(saved_val)
+			
+			var pick_button := Button.new()
+			pick_button.text = "Pick Selected"
+			pick_button.set_custom_minimum_size(Vector2(100, 25))
+			
+			pick_button.pressed.connect(func():
+				var selection = EditorInterface.get_selection().get_selected_nodes()
+				if selection.size() == 1:
+					var node = selection[0]
+					if node is Node3D:
+						var path = plugin.current_terrain_node.get_path_to(node)
+						_on_setting_changed(setting_name, path)
+						path_label.text = str(path)
+					else:
+						printerr("Selected node is not a Node3D")
+				else:
+					printerr("Please select exactly one Node3D")
+			)
+			
+			var hbox := HBoxContainer.new()
+			hbox.add_child(path_label)
+			hbox.add_child(pick_button)
+			hbox.set_custom_minimum_size(Vector2(200, 35))
+			
+			cont = CenterContainer.new()
+			cont.set_custom_minimum_size(Vector2(200, 35))
+			cont.add_child(hbox, true)
 			add_child(cont, true)
 		SettingType.SLIDER:
 			var range_data = p_params.get("range", Vector3(1.0, 50.0, 0.5))
@@ -394,6 +461,8 @@ func _get_setting_value(p_setting_name: String) -> Variant:
 			return plugin.symmetry_x
 		"symmetry_z":
 			return plugin.symmetry_z
+		"symmetry_pivot":
+			return plugin.symmetry_pivot_path
 		"material":
 			return plugin.vertex_color_idx
 		"texture_name":
@@ -418,7 +487,7 @@ func _on_terrain_setting_changed(p_setting_name: String, p_value: Variant) -> vo
 func _on_chunk_selected(option_button: OptionButton, p_chunk: String) -> void:
 	var terrain := plugin.current_terrain_node
 	var chunk : MarchingSquaresTerrainChunk = terrain.find_child(p_chunk)
-	
+
 	option_button.selected = chunk.merge_mode
 	selected_chunk = plugin.current_terrain_node.find_child(p_chunk)
 
