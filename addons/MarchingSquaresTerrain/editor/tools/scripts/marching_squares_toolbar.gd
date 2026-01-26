@@ -39,7 +39,7 @@ func _add_tools() -> void:
 		var button := Button.new()
 		
 		button.set_name(tool.label)
-		button.set_tooltip_text(tool.tooltip)
+		button.set_tooltip_text(str(tool.label, "\n", tool.tooltip))
 		button.set_button_icon(tool.icon)
 		button.set_meta("Index", i)
 		button.set_flat(true)
