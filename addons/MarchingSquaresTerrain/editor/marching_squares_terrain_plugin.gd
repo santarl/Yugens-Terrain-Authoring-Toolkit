@@ -104,6 +104,9 @@ var draw_height : float
 # Is set to true when player clicks on a tile that is part of the current draw pattern, will enter heightdrag setting mode
 var is_setting : bool
 
+# Track the action (create/delete) during a drag operation in chunk management mode
+var chunk_drag_action : int = -1  # -1 = no action, 0 = delete, 1 = create
+
 var is_making_bridge : bool
 var bridge_start_pos : Vector3
 
@@ -399,31 +402,44 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 		is_chunk_plane_hovered = true
 	
 		# Handle chunk management based on selected mode
-		if mode == TerrainToolMode.CHUNK_MANAGEMENT and event is InputEventMouseButton and event.is_pressed() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
+		if mode == TerrainToolMode.CHUNK_MANAGEMENT and ((event is InputEventMouseButton and event.is_pressed() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT) or (event is InputEventMouseMotion and Input.is_mouse_button_pressed(MouseButton.MOUSE_BUTTON_LEFT))):
 			# Get the current mode (0 = Create/Delete, 1 = Type Painter)
 			var chunk_mode = chunk_manager_mode
 
 			if chunk_mode == 0:  # Create/Delete mode
-				# Remove chunk
-				if chunk:
-					var removed_chunk = terrain.chunks[chunk_coords]
-					get_undo_redo().create_action("remove chunk")
-					get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z)
-					get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, removed_chunk)
-					get_undo_redo().commit_action()
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
+				# Determine the action when the mouse button is first pressed
+				if event is InputEventMouseButton and event.is_pressed() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
+					# Set the action based on whether there's a chunk at the initial position
+					if chunk:
+						chunk_drag_action = 0  # Delete action
+					else:
+						chunk_drag_action = 1  # Create action
 
-				# Add new chunk
-				elif not chunk:
-					# Can add a new chunk here if there is a neighbouring non-empty chunk
-					# also add if there are no chunks at all in the current terrain system
-					var can_add_empty: bool = terrain.chunks.is_empty() or terrain.has_chunk(chunk_x-1, chunk_z) or terrain.has_chunk(chunk_x+1, chunk_z) or terrain.has_chunk(chunk_x, chunk_z-1) or terrain.has_chunk(chunk_x, chunk_z+1)
-					if can_add_empty:
-						get_undo_redo().create_action("add chunk")
-						get_undo_redo().add_do_method(terrain, "add_new_chunk", chunk_x, chunk_z)
-						get_undo_redo().add_undo_method(terrain, "remove_chunk", chunk_x, chunk_z)
+				# Perform the action based on the stored drag action
+				if chunk_drag_action == 0:  # Delete action
+					if chunk:  # Only delete if chunk exists
+						var removed_chunk = terrain.chunks[chunk_coords]
+						get_undo_redo().create_action("remove chunk")
+						get_undo_redo().add_do_method(terrain, "remove_chunk_from_tree", chunk_x, chunk_z)
+						get_undo_redo().add_undo_method(terrain, "add_chunk", chunk_coords, removed_chunk)
 						get_undo_redo().commit_action()
-						return EditorPlugin.AFTER_GUI_INPUT_STOP
+
+				elif chunk_drag_action == 1:  # Create action
+					if not chunk:  # Only create if no chunk exists
+						# Can add a new chunk here if there is a neighbouring non-empty chunk
+						# also add if there are no chunks at all in the current terrain system
+						var can_add_empty: bool = terrain.chunks.is_empty() or terrain.has_chunk(chunk_x-1, chunk_z) or terrain.has_chunk(chunk_x+1, chunk_z) or terrain.has_chunk(chunk_x, chunk_z-1) or terrain.has_chunk(chunk_x, chunk_z+1)
+						if can_add_empty:
+							get_undo_redo().create_action("add chunk")
+							get_undo_redo().add_do_method(terrain, "add_new_chunk", chunk_x, chunk_z)
+							get_undo_redo().add_undo_method(terrain, "remove_chunk", chunk_x, chunk_z)
+							get_undo_redo().commit_action()
+
+				# Reset the drag action when the mouse button is released
+				if event is InputEventMouseButton and event.is_released() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
+					chunk_drag_action = -1
+
+				return EditorPlugin.AFTER_GUI_INPUT_STOP
 
 			elif chunk_mode == 1:  # Type Painter mode
 				# Paint chunk type to the clicked chunk
@@ -442,11 +458,15 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 		gizmo_plugin.terrain_gizmo._redraw()
 	else:
 		is_chunk_plane_hovered = false
-		
-	# Consume clicks but allow other click / mouse motion types to reach the gui, for camera movement, etc	
+
+	# Reset the drag action when the mouse button is released anywhere
+	if event is InputEventMouseButton and event.is_released() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
+		chunk_drag_action = -1
+
+	# Consume clicks but allow other click / mouse motion types to reach the gui, for camera movement, etc
 	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
-		
+
 	return EditorPlugin.AFTER_GUI_INPUT_PASS
 
 
