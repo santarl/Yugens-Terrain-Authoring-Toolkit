@@ -636,16 +636,17 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 			# QUICK PAINT MODE: Apply all changes as ONE atomic undo/redo action
 			# This fixes the issue where 6 separate actions are created per brush stroke
 			
-			# Build wall color patterns - ONLY paint cells in the brush pattern (no expansion)
-			# Walls are rendered at cell boundaries, so painting cell A affects walls on A's edges
+			# Build wall color patterns with expansion to adjacent cells
+			# Wall colors must be applied to adjacent cells because wall mesh vertices
+			# use corner colors from neighboring cells (lower wall portion = lower corner)
 			_set_vertex_colors(current_quick_paint.wall_texture_slot)
-			
+
 			var wall_color_pattern := {}
 			var wall_color_pattern_cc := {}
 			var wall_color_restore := {}
 			var wall_color_restore_cc := {}
-			
-			# Apply wall colors ONLY to cells in the brush pattern
+
+			# First pass: collect all cells in the pattern
 			for chunk_coords in pattern:
 				wall_color_pattern[chunk_coords] = {}
 				wall_color_pattern_cc[chunk_coords] = {}
@@ -657,7 +658,59 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 					wall_color_restore_cc[chunk_coords][cell_coords] = chunk.get_wall_color_1(cell_coords)
 					wall_color_pattern[chunk_coords][cell_coords] = vertex_color_0
 					wall_color_pattern_cc[chunk_coords][cell_coords] = vertex_color_1
-			
+
+			# Second pass: expand to adjacent cells (walls appear at boundaries between cells)
+			# This ensures uniform wall color by painting adjacent cells that share wall corners
+			for chunk_coords in pattern:
+				for cell_coords in pattern[chunk_coords]:
+					# Check all 8 adjacent cells
+					for dx in range(-1, 2):
+						for dz in range(-1, 2):
+							if dx == 0 and dz == 0:
+								continue
+
+							var adj_x : int = cell_coords.x + dx
+							var adj_z : int = cell_coords.y + dz
+							var adj_chunk_coords : Vector2i = chunk_coords
+
+							# Handle chunk boundary crossings
+							if adj_x < 0:
+								adj_chunk_coords = Vector2i(chunk_coords.x - 1, chunk_coords.y)
+								adj_x = terrain.dimensions.x - 1
+							elif adj_x >= terrain.dimensions.x:
+								adj_chunk_coords = Vector2i(chunk_coords.x + 1, chunk_coords.y)
+								adj_x = 0
+
+							if adj_z < 0:
+								adj_chunk_coords = Vector2i(adj_chunk_coords.x, chunk_coords.y - 1)
+								adj_z = terrain.dimensions.z - 1
+							elif adj_z >= terrain.dimensions.z:
+								adj_chunk_coords = Vector2i(adj_chunk_coords.x, chunk_coords.y + 1)
+								adj_z = 0
+
+							# Skip if chunk doesn't exist
+							if not terrain.chunks.has(adj_chunk_coords):
+								continue
+
+							var adj_cell := Vector2i(adj_x, adj_z)
+
+							# Skip if already in pattern
+							if wall_color_pattern.has(adj_chunk_coords) and wall_color_pattern[adj_chunk_coords].has(adj_cell):
+								continue
+
+							# Add adjacent cell
+							if not wall_color_pattern.has(adj_chunk_coords):
+								wall_color_pattern[adj_chunk_coords] = {}
+								wall_color_pattern_cc[adj_chunk_coords] = {}
+								wall_color_restore[adj_chunk_coords] = {}
+								wall_color_restore_cc[adj_chunk_coords] = {}
+
+							var adj_chunk : MarchingSquaresTerrainChunk = terrain.chunks[adj_chunk_coords]
+							wall_color_restore[adj_chunk_coords][adj_cell] = adj_chunk.get_wall_color_0(adj_cell)
+							wall_color_restore_cc[adj_chunk_coords][adj_cell] = adj_chunk.get_wall_color_1(adj_cell)
+							wall_color_pattern[adj_chunk_coords][adj_cell] = vertex_color_0
+							wall_color_pattern_cc[adj_chunk_coords][adj_cell] = vertex_color_1
+
 			# Build grass mask patterns
 			var grass_pattern := {}
 			var grass_restore := {}
