@@ -69,6 +69,12 @@ var cd : bool
 var needs_update : Array[Array] # Stores which tiles need to be updated because one of their corners' heights was changed.
 
 
+func _validate_property(property: Dictionary) -> void:
+	if property.name == "mesh":
+		if terrain_system and terrain_system.enable_runtime_generation:
+			property.usage = property.usage & ~PROPERTY_USAGE_STORAGE
+
+
 # Called by TerrainSystem parent
 func initialize_terrain(should_regenerate_mesh: bool = true):
 	needs_update = []
@@ -83,7 +89,7 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 		if grass_planter:
 			grass_planter._chunk = self
 	
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() or (terrain_system and terrain_system.enable_runtime_generation):
 		if not height_map:
 			generate_height_map()
 		if not color_map_0 or not color_map_1:
@@ -100,16 +106,17 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 		grass_planter.regenerate_all_cells()
 	
 	else:
-		printerr("ERROR: Trying to generate terrain during runtime (NOT SUPPORTED)")
+		pass # Do nothing if runtime generation is disabled (static mesh should be loaded)
 
 
 func _exit_tree() -> void:
 	if terrain_system:
 		terrain_system.chunks.erase(chunk_coords)
 	
-	var scene = get_tree().current_scene
-	if scene:
-		ResourceSaver.save(mesh, "res://"+scene.name+"/"+name+".tres", ResourceSaver.FLAG_COMPRESS)
+	if terrain_system and not terrain_system.enable_runtime_generation:
+		var scene = get_tree().current_scene
+		if scene and Engine.is_editor_hint():
+			ResourceSaver.save(mesh, "res://"+scene.name+"/"+name+".tres", ResourceSaver.FLAG_COMPRESS)
 
 
 func regenerate_mesh():
@@ -136,11 +143,18 @@ func regenerate_mesh():
 		grass_planter._chunk = self
 		grass_planter.setup(self)
 		if Engine.is_editor_hint():
-			grass_planter.owner = EditorInterface.get_edited_scene_root()
+			if terrain_system and not terrain_system.enable_runtime_generation:
+				grass_planter.owner = EditorInterface.get_edited_scene_root()
+			else:
+				grass_planter.owner = null # Ensure it's not saved
 		else:
-			grass_planter.owner = get_tree().root
+			# At runtime, owners don't need to be set for persistence, but for scene tree consistency
+			if get_tree() and get_tree().current_scene:
+				grass_planter.owner = get_tree().current_scene
 	else:
 		grass_planter._chunk = self
+		if Engine.is_editor_hint() and terrain_system and terrain_system.enable_runtime_generation:
+			grass_planter.owner = null # Ensure existing planter is depersisted
 	
 	generate_terrain_cells()
 	
@@ -163,6 +177,8 @@ func regenerate_mesh():
 	for child in get_children():
 		if child is StaticBody3D:
 			child.collision_layer = 17 # ground (1) + terrain (16)
+			if Engine.is_editor_hint() and terrain_system and terrain_system.enable_runtime_generation:
+				child.owner = null # Ensure collision is not saved
 	
 	var elapsed_time: int = Time.get_ticks_msec() - start_time
 	print_verbose("Generated terrain in "+str(elapsed_time)+"ms")

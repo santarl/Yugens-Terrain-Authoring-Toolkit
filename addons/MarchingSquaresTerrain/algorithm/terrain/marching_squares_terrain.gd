@@ -3,6 +3,12 @@ extends Node3D
 # Needs to be kept as a Node3D so that the 3d gizmo works. no 3d functionality is otherwise used, it is delegated to the chunks
 class_name MarchingSquaresTerrain
 
+@export var enable_runtime_generation: bool = false # If true, meshes are not saved to disk and are generated on game load.
+@export var regenerate_all_chunks: bool = false:
+	set(value):
+		regenerate_all_chunks = false
+		if value:
+			force_regenerate_all()
 
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var dimensions : Vector3i = Vector3i(33, 32, 33): # Total amount of height values in X and Z direction, and total height range
 	set(value):
@@ -282,6 +288,7 @@ var grass_mesh : QuadMesh = preload("res://addons/MarchingSquaresTerrain/resourc
 
 var chunks : Dictionary = {}
 
+signal terrain_generated
 
 func _init() -> void:
 	if not terrain_material:
@@ -290,6 +297,25 @@ func _init() -> void:
 		grass_mesh = preload("res://addons/MarchingSquaresTerrain/resources/materials/mst_grass_mesh.tres")
 	
 	print_rich("Welcome to [color=MEDIUM_ORCHID][url=https://www.youtube.com/@yugen_seishin]Yūgen[/url][/color]'s [wave]Marching Squares Terrain Authoring Toolkit[/wave]\nThis plugin is under MIT license")
+
+
+func _ready() -> void:
+	if not Engine.is_editor_hint() and enable_runtime_generation:
+		_initialize_runtime()
+
+
+func _initialize_runtime() -> void:
+	_ensure_textures()
+	
+	chunks.clear()
+	for chunk in get_children():
+		if chunk is MarchingSquaresTerrainChunk:
+			chunks[chunk.chunk_coords] = chunk
+			chunk.terrain_system = self
+			chunk.grass_planter = null
+			chunk.initialize_terrain(true)
+	
+	emit_signal("terrain_generated")
 
 
 func _enter_tree() -> void:
@@ -345,6 +371,14 @@ func add_new_chunk(chunk_x: int, chunk_z: int):
 			new_chunk.height_map[dimensions.z - 1][x] = chunk_down.height_map[0][x]
 	
 	new_chunk.regenerate_mesh()
+
+
+func force_regenerate_all() -> void:
+	print("Regenerating all chunks...")
+	for chunk: MarchingSquaresTerrainChunk in chunks.values():
+		if chunk:
+			chunk.regenerate_mesh()
+	print("All chunks regenerated.")
 
 
 func remove_chunk(x: int, z: int):
