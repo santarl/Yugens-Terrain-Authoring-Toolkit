@@ -7,8 +7,6 @@ const TOOLBAR : Script = preload("res://addons/MarchingSquaresTerrain/editor/too
 const TOOL_ATTRIBUTES : Script = preload("res://addons/MarchingSquaresTerrain/editor/tools/scripts/marching_squares_tool_attributes.gd")
 const TEXTURE_SETTINGS : Script = preload("res://addons/MarchingSquaresTerrain/editor/tools/scripts/marching_squares_texture_settings.gd")
 
-var vp_texture_names = preload("res://addons/MarchingSquaresTerrain/resources/texture_names.tres")
-
 var plugin : MarchingSquaresTerrainPlugin
 var toolbar : TOOLBAR
 var tool_attributes : TOOL_ATTRIBUTES
@@ -138,9 +136,10 @@ func _on_setting_changed(p_setting_name: String, p_value: Variant) -> void:
 			if p_value is String:
 				if plugin.vertex_color_idx == 0 or plugin.vertex_color_idx == 15:
 					return
-				var new_names = vp_texture_names.floor_texture_names.duplicate()
-				new_names[plugin.vertex_color_idx] = p_value
-				vp_texture_names.floor_texture_names = new_names
+				var new_preset_names = plugin.current_texture_preset.new_tex_names.texture_names.duplicate()
+				new_preset_names[plugin.vertex_color_idx] = p_value
+				plugin.current_texture_preset.new_tex_names.texture_names = new_preset_names
+			tool_attributes.show_tool_attributes(active_tool)
 		"texture_preset":
 			if p_value is MarchingSquaresTexturePreset:
 				plugin.current_texture_preset = p_value

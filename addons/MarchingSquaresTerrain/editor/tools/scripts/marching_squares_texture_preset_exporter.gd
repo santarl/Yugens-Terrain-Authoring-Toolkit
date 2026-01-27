@@ -107,14 +107,14 @@ func _save_preset(path: String) -> void:
 
 func _get_current_texture_data() -> MarchingSquaresTextureList:
 	var new_texture_list := MarchingSquaresTextureList.new()
-	var current_terrain_node : MarchingSquaresTerrain = get_parent().get_parent().plugin.current_terrain_node #There has to be a better way to do this but this works for now
+	var current_terrain_node : MarchingSquaresTerrain = get_parent().get_parent().get_parent().plugin.current_terrain_node #There has to be a better way to do this but this works for now
 	
-	for i in range(4): # The range is 4 because MarchingSquaresTextureList has 4 export variables (floor, grass sprites, grass colors, has_grass)
+	for i in range(4): # The range is 4 because MarchingSquaresTextureList has 4 export variables (terrain textures, grass sprites, grass colors, has_grass)
 		match i:
-			0: # floor_textures
-				for i_floor_tex in range(new_texture_list.floor_textures.size()):
-					var tex : Texture2D
-					match i_floor_tex:
+			0: # terrain_textures
+				for i_tex in range(new_texture_list.terrain_textures.size()):
+					var tex : Texture2D = Texture2D.new()
+					match i_tex:
 						0:
 							tex = current_terrain_node.ground_texture
 						1:
@@ -145,11 +145,10 @@ func _get_current_texture_data() -> MarchingSquaresTextureList:
 							tex = current_terrain_node.texture_14
 						14:
 							tex = current_terrain_node.texture_15
-					if tex != null:
-						new_texture_list.floor_textures[i_floor_tex] = tex
+					new_texture_list.terrain_textures[i_tex] = tex
 			1: # grass_sprites
 				for i_grass_tex in range(new_texture_list.grass_sprites.size()):
-					var tex : Texture2D
+					var tex : Texture2D = Texture2D.new()
 					match i_grass_tex:
 						0:
 							tex = current_terrain_node.grass_sprite
@@ -167,7 +166,7 @@ func _get_current_texture_data() -> MarchingSquaresTextureList:
 						new_texture_list.grass_sprites[i_grass_tex] = tex
 			2: # grass_colors
 				for i_grass_col in range(new_texture_list.grass_colors.size()):
-					var col : Color
+					var col : Color = Color.PURPLE
 					match i_grass_col:
 						0:
 							col = current_terrain_node.ground_color
@@ -185,7 +184,7 @@ func _get_current_texture_data() -> MarchingSquaresTextureList:
 						new_texture_list.grass_colors[i_grass_col] = col
 			3: # has_grass
 				for i_has_grass in range(new_texture_list.has_grass.size()):
-					var val : bool
+					var val : bool = true
 					match i_has_grass:
 						0:
 							val = current_terrain_node.tex2_has_grass
@@ -199,5 +198,5 @@ func _get_current_texture_data() -> MarchingSquaresTextureList:
 							val = current_terrain_node.tex6_has_grass
 					if val != null:
 						new_texture_list.has_grass[i_has_grass] = val
-
+	
 	return new_texture_list

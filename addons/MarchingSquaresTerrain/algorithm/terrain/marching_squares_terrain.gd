@@ -429,11 +429,11 @@ class_name MarchingSquaresTerrain
 		if not is_batch_updating:
 			terrain_material.set_shader_parameter("texture_scale_16", value)
 
-@export_storage var current_terrain_preset: MarchingSquaresTexturePreset = null
+@export_storage var current_texture_preset : MarchingSquaresTexturePreset = null
 
 # Default wall texture slot (0-15) used when no quick paint is active
 # Default is 5 (Texture 6 in 1-indexed UI terms)
-@export_storage var default_wall_texture_slot: int = 5
+@export_storage var default_wall_texture_slot : int = 5
 
 var void_texture := preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/void_texture.tres")
 var placeholder_wind_texture := preload("res://addons/MarchingSquaresTerrain/resources/plugin materials/wind_noise_texture.tres") # Change to your own texture
@@ -690,46 +690,46 @@ func force_batch_update() -> void:
 # Syncs and saves current UI texture values to the given preset resource
 # Called by marching_squares_ui.gd when saving monitoring settings changes
 func save_to_preset() -> void:
-	if current_terrain_preset == null:
+	if current_texture_preset == null:
 		# Don't print an error here as not having a preset just means the user is making a new one
 		return
 	
-	# Floor textures
-	current_terrain_preset.new_textures.floor_textures[0] = ground_texture
-	current_terrain_preset.new_textures.floor_textures[1] = texture_2
-	current_terrain_preset.new_textures.floor_textures[2] = texture_3
-	current_terrain_preset.new_textures.floor_textures[3] = texture_4
-	current_terrain_preset.new_textures.floor_textures[4] = texture_5
-	current_terrain_preset.new_textures.floor_textures[5] = texture_6
-	current_terrain_preset.new_textures.floor_textures[6] = texture_7
-	current_terrain_preset.new_textures.floor_textures[7] = texture_8
-	current_terrain_preset.new_textures.floor_textures[8] = texture_9
-	current_terrain_preset.new_textures.floor_textures[9] = texture_10
-	current_terrain_preset.new_textures.floor_textures[10] = texture_11
-	current_terrain_preset.new_textures.floor_textures[11] = texture_12
-	current_terrain_preset.new_textures.floor_textures[12] = texture_13
-	current_terrain_preset.new_textures.floor_textures[13] = texture_14
-	current_terrain_preset.new_textures.floor_textures[14] = texture_15
+	# Terrain textures
+	current_texture_preset.new_textures.terrain_textures[0] = ground_texture
+	current_texture_preset.new_textures.terrain_textures[1] = texture_2
+	current_texture_preset.new_textures.terrain_textures[2] = texture_3
+	current_texture_preset.new_textures.terrain_textures[3] = texture_4
+	current_texture_preset.new_textures.terrain_textures[4] = texture_5
+	current_texture_preset.new_textures.terrain_textures[5] = texture_6
+	current_texture_preset.new_textures.terrain_textures[6] = texture_7
+	current_texture_preset.new_textures.terrain_textures[7] = texture_8
+	current_texture_preset.new_textures.terrain_textures[8] = texture_9
+	current_texture_preset.new_textures.terrain_textures[9] = texture_10
+	current_texture_preset.new_textures.terrain_textures[10] = texture_11
+	current_texture_preset.new_textures.terrain_textures[11] = texture_12
+	current_texture_preset.new_textures.terrain_textures[12] = texture_13
+	current_texture_preset.new_textures.terrain_textures[13] = texture_14
+	current_texture_preset.new_textures.terrain_textures[14] = texture_15
 	
 	# Grass sprites
-	current_terrain_preset.new_textures.grass_sprites[0] = grass_sprite
-	current_terrain_preset.new_textures.grass_sprites[1] = grass_sprite_tex_2
-	current_terrain_preset.new_textures.grass_sprites[2] = grass_sprite_tex_3
-	current_terrain_preset.new_textures.grass_sprites[3] = grass_sprite_tex_4
-	current_terrain_preset.new_textures.grass_sprites[4] = grass_sprite_tex_5
-	current_terrain_preset.new_textures.grass_sprites[5] = grass_sprite_tex_6
+	current_texture_preset.new_textures.grass_sprites[0] = grass_sprite
+	current_texture_preset.new_textures.grass_sprites[1] = grass_sprite_tex_2
+	current_texture_preset.new_textures.grass_sprites[2] = grass_sprite_tex_3
+	current_texture_preset.new_textures.grass_sprites[3] = grass_sprite_tex_4
+	current_texture_preset.new_textures.grass_sprites[4] = grass_sprite_tex_5
+	current_texture_preset.new_textures.grass_sprites[5] = grass_sprite_tex_6
 	
 	# Grass colors
-	current_terrain_preset.new_textures.grass_colors[0] = ground_color
-	current_terrain_preset.new_textures.grass_colors[1] = ground_color_2
-	current_terrain_preset.new_textures.grass_colors[2] = ground_color_3
-	current_terrain_preset.new_textures.grass_colors[3] = ground_color_4
-	current_terrain_preset.new_textures.grass_colors[4] = ground_color_5
-	current_terrain_preset.new_textures.grass_colors[5] = ground_color_6
+	current_texture_preset.new_textures.grass_colors[0] = ground_color
+	current_texture_preset.new_textures.grass_colors[1] = ground_color_2
+	current_texture_preset.new_textures.grass_colors[2] = ground_color_3
+	current_texture_preset.new_textures.grass_colors[3] = ground_color_4
+	current_texture_preset.new_textures.grass_colors[4] = ground_color_5
+	current_texture_preset.new_textures.grass_colors[5] = ground_color_6
 	
 	# Has grass flags
-	current_terrain_preset.new_textures.has_grass[0] = tex2_has_grass
-	current_terrain_preset.new_textures.has_grass[1] = tex3_has_grass
-	current_terrain_preset.new_textures.has_grass[2] = tex4_has_grass
-	current_terrain_preset.new_textures.has_grass[3] = tex5_has_grass
-	current_terrain_preset.new_textures.has_grass[4] = tex6_has_grass
+	current_texture_preset.new_textures.has_grass[0] = tex2_has_grass
+	current_texture_preset.new_textures.has_grass[1] = tex3_has_grass
+	current_texture_preset.new_textures.has_grass[2] = tex4_has_grass
+	current_texture_preset.new_textures.has_grass[3] = tex5_has_grass
+	current_texture_preset.new_textures.has_grass[4] = tex6_has_grass

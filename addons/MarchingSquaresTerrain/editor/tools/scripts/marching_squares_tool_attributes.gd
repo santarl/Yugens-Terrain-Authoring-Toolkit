@@ -264,7 +264,7 @@ func add_setting(p_params: Dictionary) -> void:
 				
 				# Sync dropdown selection with current plugin.current_texture_preset
 				var terrain := MarchingSquaresTerrainPlugin.instance.current_terrain_node
-				var current_texture_preset = terrain.current_terrain_preset if terrain else null
+				var current_texture_preset = terrain.current_texture_preset if terrain else null
 				if current_texture_preset == null:
 					preset_button.select(0)  # Select "None"
 				else:
@@ -301,8 +301,8 @@ func add_setting(p_params: Dictionary) -> void:
 			
 			# 2. Load PRESET-SPECIFIC quick paints (if preset is selected and has any)
 			var terrain := MarchingSquaresTerrainPlugin.instance.current_terrain_node
-			if terrain and terrain.current_terrain_preset:
-				var preset := terrain.current_terrain_preset
+			if terrain and terrain.current_texture_preset:
+				var preset := terrain.current_texture_preset
 				if preset.quick_paints.size() > 0:
 					quick_paint_button.add_separator()  # Visual separator
 					for quick_paint in preset.quick_paints:
@@ -475,11 +475,11 @@ func add_setting(p_params: Dictionary) -> void:
 						ts_cont.add_child(checkbox, true)
 						hbox.add_child(ts_cont, true)
 						vbox.add_child(hbox, true)
-					"WallDropdown":
+					"WallDropdown": #Q: Do we still need this?
 						var wall_dropdown := OptionButton.new()
 						wall_dropdown.set_flat(true)
 						# Populate with texture names from the shared texture names resource
-						for tex_name in attribute_list.vp_tex_names.floor_texture_names:
+						for tex_name in attribute_list.vp_tex_names.texture_names:
 							wall_dropdown.add_item(tex_name)
 						# Set current selection from terrain node
 						wall_dropdown.selected = plugin.current_terrain_node.default_wall_texture_slot

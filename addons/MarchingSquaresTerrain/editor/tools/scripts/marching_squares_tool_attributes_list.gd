@@ -69,7 +69,7 @@ var material : Dictionary = {
 	"name": "material",
 	"type": "option",
 	"label": "Material",
-	"options": vp_tex_names.floor_texture_names,
+	"options": vp_tex_names.texture_names,
 	"default": 0,
 }
 

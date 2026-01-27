@@ -5,6 +5,8 @@ class_name MarchingSquaresTerrainPlugin
 
 static var instance : MarchingSquaresTerrainPlugin
 
+const EMPTY_TEXTURE_PRESET : MarchingSquaresTexturePreset = preload("res://addons/MarchingSquaresTerrain/resources/empty_project.tres")
+
 var gizmo_plugin := MarchingSquaresTerrainGizmoPlugin.new()
 var toolbar := MarchingSquaresToolbar.new()
 var tool_attributes := MarchingSquaresToolAttributes.new()
@@ -72,6 +74,7 @@ var current_texture_preset : MarchingSquaresTexturePreset = null:
 	set(value):
 		current_texture_preset = value
 		if not _syncing_from_terrain:
+			vp_texture_names.texture_names = value.new_tex_names.texture_names
 			_set_new_textures(value)
 
 # Currently selected preset for quick painting (does NOT change the global terrain)
@@ -213,7 +216,7 @@ func _edit(object: Object) -> void:
 			# Sync plugin's preset from the selected terrain's saved preset
 			# This ensures each terrain keeps its own preset on selection/reload
 			_syncing_from_terrain = true
-			current_texture_preset = object.current_terrain_preset
+			current_texture_preset = object.current_texture_preset
 			_syncing_from_terrain = false
 	else:
 		if ui:
@@ -619,7 +622,7 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 			color_key_0: restore_pattern,
 			color_key_1: restore_pattern_cc
 		}
-
+		
 		var action_name := "terrain wall paint" if paint_walls_mode else "terrain vertex paint"
 		undo_redo.create_action(action_name)
 		undo_redo.add_do_method(self, "apply_composite_pattern_action", terrain, do_patterns)
@@ -636,12 +639,12 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 			# QUICK PAINT MODE: Apply all changes as ONE atomic undo/redo action
 			# This fixes the issue where 6 separate actions are 
 			_set_vertex_colors(current_quick_paint.wall_texture_slot)
-
+			
 			var wall_color_pattern := {}
 			var wall_color_pattern_cc := {}
 			var wall_color_restore := {}
 			var wall_color_restore_cc := {}
-
+			
 			# First pass: collect all cells in the pattern
 			for chunk_coords in pattern:
 				wall_color_pattern[chunk_coords] = {}
@@ -654,7 +657,7 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 					wall_color_restore_cc[chunk_coords][cell_coords] = chunk.get_wall_color_1(cell_coords)
 					wall_color_pattern[chunk_coords][cell_coords] = vertex_color_0
 					wall_color_pattern_cc[chunk_coords][cell_coords] = vertex_color_1
-
+			
 			# Second pass: expand to adjacent cells (walls appear at boundaries between cells)
 			# This ensures uniform wall color by painting adjacent cells that share wall corners
 			for chunk_coords in pattern:
@@ -664,11 +667,11 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 						for dz in range(-1, 2):
 							if dx == 0 and dz == 0:
 								continue
-
+							
 							var adj_x : int = cell_coords.x + dx
 							var adj_z : int = cell_coords.y + dz
 							var adj_chunk_coords : Vector2i = chunk_coords
-
+							
 							# Handle chunk boundary crossings
 							if adj_x < 0:
 								adj_chunk_coords = Vector2i(chunk_coords.x - 1, chunk_coords.y)
@@ -676,37 +679,37 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 							elif adj_x >= terrain.dimensions.x:
 								adj_chunk_coords = Vector2i(chunk_coords.x + 1, chunk_coords.y)
 								adj_x = 0
-
+							
 							if adj_z < 0:
 								adj_chunk_coords = Vector2i(adj_chunk_coords.x, chunk_coords.y - 1)
 								adj_z = terrain.dimensions.z - 1
 							elif adj_z >= terrain.dimensions.z:
 								adj_chunk_coords = Vector2i(adj_chunk_coords.x, chunk_coords.y + 1)
 								adj_z = 0
-
+							
 							# Skip if chunk doesn't exist
 							if not terrain.chunks.has(adj_chunk_coords):
 								continue
-
+							
 							var adj_cell := Vector2i(adj_x, adj_z)
-
+							
 							# Skip if already in pattern
 							if wall_color_pattern.has(adj_chunk_coords) and wall_color_pattern[adj_chunk_coords].has(adj_cell):
 								continue
-
+							
 							# Add adjacent cell
 							if not wall_color_pattern.has(adj_chunk_coords):
 								wall_color_pattern[adj_chunk_coords] = {}
 								wall_color_pattern_cc[adj_chunk_coords] = {}
 								wall_color_restore[adj_chunk_coords] = {}
 								wall_color_restore_cc[adj_chunk_coords] = {}
-
+							
 							var adj_chunk : MarchingSquaresTerrainChunk = terrain.chunks[adj_chunk_coords]
 							wall_color_restore[adj_chunk_coords][adj_cell] = adj_chunk.get_wall_color_0(adj_cell)
 							wall_color_restore_cc[adj_chunk_coords][adj_cell] = adj_chunk.get_wall_color_1(adj_cell)
 							wall_color_pattern[adj_chunk_coords][adj_cell] = vertex_color_0
 							wall_color_pattern_cc[adj_chunk_coords][adj_cell] = vertex_color_1
-
+			
 			# Build grass mask patterns
 			var grass_pattern := {}
 			var grass_restore := {}
@@ -767,12 +770,12 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 			# NON-QUICK PAINT MODE: Apply height + default wall texture
 			# Use the terrain's default_wall_texture_slot for wall colors
 			_set_vertex_colors(terrain.default_wall_texture_slot)
-
+			
 			var wall_color_pattern := {}
 			var wall_color_pattern_cc := {}
 			var wall_color_restore := {}
 			var wall_color_restore_cc := {}
-
+			
 			# First pass: collect all cells in the pattern
 			for chunk_coords in pattern:
 				wall_color_pattern[chunk_coords] = {}
@@ -785,7 +788,7 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 					wall_color_restore_cc[chunk_coords][cell_coords] = chunk.get_wall_color_1(cell_coords)
 					wall_color_pattern[chunk_coords][cell_coords] = vertex_color_0
 					wall_color_pattern_cc[chunk_coords][cell_coords] = vertex_color_1
-
+			
 			# Second pass: expand to adjacent cells (walls appear at boundaries between cells)
 			for chunk_coords in pattern:
 				for cell_coords in pattern[chunk_coords]:
@@ -793,45 +796,45 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 						for dz in range(-1, 2):
 							if dx == 0 and dz == 0:
 								continue
-
+							
 							var adj_x : int = cell_coords.x + dx
 							var adj_z : int = cell_coords.y + dz
 							var adj_chunk_coords : Vector2i = chunk_coords
-
+							
 							if adj_x < 0:
 								adj_chunk_coords = Vector2i(chunk_coords.x - 1, chunk_coords.y)
 								adj_x = terrain.dimensions.x - 1
 							elif adj_x >= terrain.dimensions.x:
 								adj_chunk_coords = Vector2i(chunk_coords.x + 1, chunk_coords.y)
 								adj_x = 0
-
+							
 							if adj_z < 0:
 								adj_chunk_coords = Vector2i(adj_chunk_coords.x, chunk_coords.y - 1)
 								adj_z = terrain.dimensions.z - 1
 							elif adj_z >= terrain.dimensions.z:
 								adj_chunk_coords = Vector2i(adj_chunk_coords.x, chunk_coords.y + 1)
 								adj_z = 0
-
+							
 							if not terrain.chunks.has(adj_chunk_coords):
 								continue
-
+							
 							var adj_cell := Vector2i(adj_x, adj_z)
-
+							
 							if wall_color_pattern.has(adj_chunk_coords) and wall_color_pattern[adj_chunk_coords].has(adj_cell):
 								continue
-
+							
 							if not wall_color_pattern.has(adj_chunk_coords):
 								wall_color_pattern[adj_chunk_coords] = {}
 								wall_color_pattern_cc[adj_chunk_coords] = {}
 								wall_color_restore[adj_chunk_coords] = {}
 								wall_color_restore_cc[adj_chunk_coords] = {}
-
+							
 							var adj_chunk : MarchingSquaresTerrainChunk = terrain.chunks[adj_chunk_coords]
 							wall_color_restore[adj_chunk_coords][adj_cell] = adj_chunk.get_wall_color_0(adj_cell)
 							wall_color_restore_cc[adj_chunk_coords][adj_cell] = adj_chunk.get_wall_color_1(adj_cell)
 							wall_color_pattern[adj_chunk_coords][adj_cell] = vertex_color_0
 							wall_color_pattern_cc[adj_chunk_coords][adj_cell] = vertex_color_1
-
+			
 			# Create composite action with height + wall colors
 			var do_patterns := {
 				"height": pattern,
@@ -843,7 +846,7 @@ func draw_pattern(terrain: MarchingSquaresTerrain):
 				"wall_color_0": wall_color_restore,
 				"wall_color_1": wall_color_restore_cc
 			}
-
+			
 			undo_redo.create_action("terrain height draw")
 			undo_redo.add_do_method(self, "apply_composite_pattern_action", terrain, do_patterns)
 			undo_redo.add_undo_method(self, "apply_composite_pattern_action", terrain, undo_patterns)
@@ -1026,19 +1029,17 @@ func _set_vertex_colors(vc_idx: int) -> void:
 
 func _set_new_textures(_preset: MarchingSquaresTexturePreset) -> void:
 	if _preset == null:
-		return
+		_preset = EMPTY_TEXTURE_PRESET.duplicate()
 	
 	# Set BatchUpdate flag to avoid indivudal setters triggering updates
 	current_terrain_node.is_batch_updating = true
 	
-	for i in range(4): # The range is 4 because MarchingSquaresTextureList has 4 export variables (floor, grass sprites, grass colors, has_grass)
+	for i in range(4): # The range is 4 because MarchingSquaresTextureList has 4 export variables (terrain textures, grass sprites, grass colors, has_grass)
 		match i:
-			0: # floor_textures (unified for both floor and wall painting)
-				for i_floor_tex in range(_preset.new_textures.floor_textures.size()):
-					var tex : Texture2D = _preset.new_textures.floor_textures[i_floor_tex]
-					if tex == null:
-						continue
-					match i_floor_tex:
+			0: # terrain_textures (unified for both floor and wall painting)
+				for i_tex in range(_preset.new_textures.terrain_textures.size()):
+					var tex : Texture2D = _preset.new_textures.terrain_textures[i_tex]
+					match i_tex:
 						0:
 							current_terrain_node.ground_texture = tex
 						1:
@@ -1119,8 +1120,6 @@ func _set_new_textures(_preset: MarchingSquaresTexturePreset) -> void:
 							current_terrain_node.tex5_has_grass = val
 						4:
 							current_terrain_node.tex6_has_grass = val
-
-	vp_texture_names.floor_texture_names = _preset.new_tex_names.floor_texture_names
 	
 	# Apply a batch update
 	current_terrain_node.force_batch_update()
@@ -1129,7 +1128,7 @@ func _set_new_textures(_preset: MarchingSquaresTexturePreset) -> void:
 	EditorInterface.mark_scene_as_unsaved()
 	
 	# Store current preset
-	current_terrain_node.current_terrain_preset = _preset
+	current_terrain_node.current_texture_preset = _preset
 	
 	# Set batch update to false, to allow setters to work individually
 	current_terrain_node.is_batch_updating = false
