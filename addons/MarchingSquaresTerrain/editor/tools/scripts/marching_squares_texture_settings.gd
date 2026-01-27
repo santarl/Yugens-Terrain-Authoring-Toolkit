@@ -89,7 +89,7 @@ const VAR_NAMES : Array[Dictionary] = [
 
 
 func _ready() -> void:
-	set_custom_minimum_size(Vector2(165, 0))
+	set_custom_minimum_size(Vector2(195, 0))
 	add_theme_constant_override("separation", 5)
 	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
@@ -98,8 +98,6 @@ func _ready() -> void:
 func add_texture_settings() -> void:
 	for child in get_children():
 		child.queue_free()
-	
-	set_custom_minimum_size(Vector2(165, 0))
 	
 	var terrain := plugin.current_terrain_node
 	
@@ -147,6 +145,7 @@ func add_texture_settings() -> void:
 			scale_label.set_custom_minimum_size(Vector2(40, 20))
 			scale_hbox.add_child(scale_label)
 			
+			var c_cont_2 := CenterContainer.new()
 			var scale_slider := HSlider.new()
 			scale_slider.min_value = 0.1
 			scale_slider.max_value = 40.0
@@ -159,7 +158,8 @@ func add_texture_settings() -> void:
 			scale_slider.drag_ended.connect(
 				func(val): _on_slider_drag_ended(val)
 			)
-			scale_hbox.add_child(scale_slider)
+			c_cont_2.add_child(scale_slider, true)
+			scale_hbox.add_child(c_cont_2, true)
 			
 			var scale_value_label := Label.new()
 			scale_value_label.text = str(scale_value)
@@ -194,7 +194,7 @@ func add_texture_settings() -> void:
 			c_pick_button.set_custom_minimum_size(Vector2(150, 25))
 			
 			var c_cont_2 = CenterContainer.new()
-			c_cont_2.set_custom_minimum_size(Vector2(150, 25))
+			c_cont_2.set_custom_minimum_size(Vector2(150, 30))
 			c_cont_2.add_child(c_pick_button, true)
 			vbox.add_child(c_cont_2, true)
 		
@@ -215,10 +215,11 @@ func add_texture_settings() -> void:
 		
 		vbox.add_child(HSeparator.new())
 	
-	vbox.add_child(VSeparator.new(), true)
+	var m_cont := MarginContainer.new()
+	m_cont.add_theme_constant_override("margin_bottom", 7)
 	var export_button = MarchingSquaresTexturePresetExporter.new()
-	vbox.add_child(export_button, true)
-	vbox.add_child(VSeparator.new(), true)
+	m_cont.add_child(export_button, true)
+	vbox.add_child(m_cont, true)
 	
 	add_child(vbox, true)
 

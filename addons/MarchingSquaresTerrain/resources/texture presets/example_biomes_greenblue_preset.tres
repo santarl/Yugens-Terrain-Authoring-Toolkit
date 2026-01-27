@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MarchingSquaresTexturePreset" load_steps=20 format=3 uid="uid://orvvwqol311t"]
+[gd_resource type="Resource" script_class="MarchingSquaresTexturePreset" format=3 uid="uid://orvvwqol311t"]
 
 [ext_resource type="Script" uid="uid://dqeuj3gddfm65" path="res://addons/MarchingSquaresTerrain/editor/tools/scripts/marching_squares_texture_names.gd" id="1_vegri"]
 [ext_resource type="Texture2D" uid="uid://dbnc04k3n0sro" path="res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_terrain_noise.res" id="2_v8enj"]

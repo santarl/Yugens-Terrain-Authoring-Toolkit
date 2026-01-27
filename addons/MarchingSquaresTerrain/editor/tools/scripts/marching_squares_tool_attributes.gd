@@ -48,7 +48,7 @@ var hbox_container
 
 
 func _ready() -> void:
-	set_custom_minimum_size(Vector2(0, 45))
+	set_custom_minimum_size(Vector2(0, 35))
 	add_theme_constant_override("separation", 5)
 	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

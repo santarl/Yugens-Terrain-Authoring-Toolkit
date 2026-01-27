@@ -1,37 +1,41 @@
-[gd_resource type="ShaderMaterial" load_steps=5 format=3 uid="uid://bahbybbjwkhlg"]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://bahbybbjwkhlg"]
 
 [ext_resource type="Shader" uid="uid://ltkimbmrvpyo" path="res://addons/MarchingSquaresTerrain/resources/shaders/mst_terrain.gdshader" id="1_cywoj"]
 [ext_resource type="Texture2D" uid="uid://csvthlqhb8g5j" path="res://addons/MarchingSquaresTerrain/resources/plugin materials/void_texture.tres" id="2_f8vgh"]
 [ext_resource type="Texture2D" uid="uid://dbnc04k3n0sro" path="res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_terrain_noise.res" id="3_30qmr"]
-[ext_resource type="Texture2D" uid="uid://cv87twjgbqq0s" path="res://addons/MarchingSquaresTerrain/resources/plugin materials/wall_noise_texture.res" id="4_30qmr"]
 
 [resource]
 render_priority = -1
 shader = ExtResource("1_cywoj")
 shader_parameter/wall_threshold = 0.0
 shader_parameter/chunk_size = Vector3i(33, 32, 33)
+shader_parameter/cell_size = Vector2(2, 2)
 shader_parameter/ground_albedo = Color(0.39215687, 0.47058824, 0.31764707, 1)
 shader_parameter/ground_albedo_2 = Color(0.30519673, 0.4626618, 0.5514242, 1)
 shader_parameter/ground_albedo_3 = Color(0.72663283, 0.4819908, 0.8144531, 1)
 shader_parameter/ground_albedo_4 = Color(0.6833746, 0.58623713, 0.35598898, 1)
 shader_parameter/ground_albedo_5 = Color(0.48235673, 0.62252915, 0.2718495, 1)
 shader_parameter/ground_albedo_6 = Color(0.44313726, 0.44705883, 0.3647059, 1)
-shader_parameter/wall_albedo = Color(0.36862746, 0.3372549, 0.27058825, 1)
-shader_parameter/wall_albedo_2 = Color(0.25874504, 0.34447184, 0.59553534, 1)
-shader_parameter/wall_albedo_3 = Color(0.34901962, 0.32156864, 0.2509804, 1)
-shader_parameter/wall_albedo_4 = Color(0.48598963, 0.40865216, 0.22741425, 1)
-shader_parameter/wall_albedo_5 = Color(0.36078432, 0.32941177, 0.25882354, 1)
-shader_parameter/wall_albedo_6 = Color(0.41960785, 0.38039216, 0.29803923, 1)
-shader_parameter/wall_tex_1 = ExtResource("4_30qmr")
-shader_parameter/wall_tex_2 = ExtResource("3_30qmr")
-shader_parameter/wall_tex_3 = ExtResource("3_30qmr")
-shader_parameter/wall_tex_4 = ExtResource("3_30qmr")
-shader_parameter/wall_tex_5 = ExtResource("3_30qmr")
-shader_parameter/wall_tex_6 = ExtResource("3_30qmr")
 shader_parameter/use_hard_square_edges = false
 shader_parameter/blend_sharpness = 5.0
 shader_parameter/blend_noise_scale = 10.0
 shader_parameter/blend_noise_strength = 0.0
+shader_parameter/texture_scale_1 = 1.0
+shader_parameter/texture_scale_2 = 1.0
+shader_parameter/texture_scale_3 = 1.0
+shader_parameter/texture_scale_4 = 1.0
+shader_parameter/texture_scale_5 = 1.0
+shader_parameter/texture_scale_6 = 1.0
+shader_parameter/texture_scale_7 = 1.0
+shader_parameter/texture_scale_8 = 1.0
+shader_parameter/texture_scale_9 = 1.0
+shader_parameter/texture_scale_10 = 1.0
+shader_parameter/texture_scale_11 = 1.0
+shader_parameter/texture_scale_12 = 1.0
+shader_parameter/texture_scale_13 = 1.0
+shader_parameter/texture_scale_14 = 1.0
+shader_parameter/texture_scale_15 = 1.0
+shader_parameter/texture_scale_16 = 1.0
 shader_parameter/vc_tex_rr = ExtResource("3_30qmr")
 shader_parameter/vc_tex_rg = ExtResource("3_30qmr")
 shader_parameter/vc_tex_rb = ExtResource("3_30qmr")
