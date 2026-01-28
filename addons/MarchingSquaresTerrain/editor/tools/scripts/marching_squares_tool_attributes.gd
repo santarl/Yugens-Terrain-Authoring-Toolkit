@@ -363,8 +363,13 @@ func add_setting(p_params: Dictionary) -> void:
 			option_button.set_custom_minimum_size(Vector2(65, 35))
 			for mode in MarchingSquaresTerrainChunk.Mode:
 				option_button.add_item(mode)
-			option_button.selected = 1 # Fallback base value
-			option_button.selected = selected_chunk.merge_mode
+			
+			# Safe assignment for option_button.selected
+			if selected_chunk and selected_chunk.get("merge_mode") != null:
+				option_button.selected = selected_chunk.merge_mode
+			else:
+				option_button.selected = 1 # Default to POLYHEDRON if something is wrong
+			
 			# Update the selected chunk type value when the dropdown changes
 			option_button.item_selected.connect(func(index):
 				_on_chunk_mode_changed(index)
