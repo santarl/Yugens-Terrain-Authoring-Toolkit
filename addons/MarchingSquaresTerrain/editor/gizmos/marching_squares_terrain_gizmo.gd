@@ -80,7 +80,7 @@ func _redraw():
 		terrain_plugin.draw_height_set = true
 		terrain_plugin.draw_height = terrain_plugin.brush_position.y
 	
-	var terrain_chunk_hovered: bool = terrain_plugin.terrain_hovered and terrain_system.chunks.has(terrain_plugin.current_hovered_chunk)
+	var terrain_chunk_hovered: bool = terrain_plugin.terrain_hovered
 	
 	if terrain_chunk_hovered:
 		var pivot_node = terrain_system.find_child("SymmetryAxis")
