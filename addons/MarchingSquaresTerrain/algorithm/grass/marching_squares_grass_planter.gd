@@ -1,6 +1,6 @@
 @tool
 extends MultiMeshInstance3D
-class_name GrassPlanter
+class_name MarchingSquaresGrassPlanter
 
 
 var _chunk : MarchingSquaresTerrainChunk
@@ -55,25 +55,25 @@ func regenerate_all_cells() -> void:
 func generate_grass_on_cell(cell_coords: Vector2i) -> void:
 	# Safety checks:
 	if not _chunk:
-		printerr("ERROR: GrassPlanter couldn't find a reference to _chunk")
+		printerr("ERROR: MarchingSquaresGrassPlanter couldn't find a reference to _chunk")
 		return
 	
 	if not terrain_system:
-		printerr("ERROR: GrassPlanter couldn't find a reference to terrain_system")
+		printerr("ERROR: MarchingSquaresGrassPlanter couldn't find a reference to terrain_system")
 		return
 	
 	if not _chunk.cell_geometry:
-		printerr("ERROR: GrassPlatner couldn't find a reference to cell_geometry")
+		printerr("ERROR: MarchingSquaresGrassPlanter couldn't find a reference to cell_geometry")
 		return
 	
 	if not _chunk.cell_geometry.has(cell_coords):
-		printerr("ERROR: GrassPlanter couldn't find a reference to cell_coords")
+		printerr("ERROR: MarchingSquaresGrassPlanter couldn't find a reference to cell_coords")
 		return
 	
 	var cell_geometry = _chunk.cell_geometry[cell_coords]
 	
 	if not cell_geometry.has("verts") or not cell_geometry.has("uvs") or not cell_geometry.has("colors_0") or not cell_geometry.has("colors_1") or not cell_geometry.has("grass_mask") or not cell_geometry.has("is_floor"):
-		printerr("ERROR: [GrassPlanter] cell_geometry doesn't have one of the following required data: 1) verts, 2) uvs, 3) colors, 4) grass_mask, 5) is_floor")
+		printerr("ERROR: [MarchingSquaresGrassPlanter] cell_geometry doesn't have one of the following required data: 1) verts, 2) uvs, 3) colors, 4) grass_mask, 5) is_floor")
 		return
 	
 	var points: PackedVector2Array = []
@@ -278,7 +278,7 @@ func _get_terrain_image(texture_id: int) -> Image:
 		_: # Base grass
 			terrain_texture = material.get_shader_parameter("vc_tex_rr")
 	if terrain_texture == null:
-		printerr("ERROR: [GrassPlanter] couldn't find the terrain's ShaderMaterial texture " + str(texture_id))
+		printerr("ERROR: [MarchingSquaresGrassPlanter] couldn't find the terrain's ShaderMaterial texture " + str(texture_id))
 		return null
 	
 	var img : Image = terrain_texture.get_image()

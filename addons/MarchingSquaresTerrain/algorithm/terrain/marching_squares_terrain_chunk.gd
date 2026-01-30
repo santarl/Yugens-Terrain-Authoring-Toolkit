@@ -24,8 +24,7 @@ const BLEND_EDGE_SENSITIVITY : float = 1.25
 	set(mode):
 		merge_mode = mode
 		if is_inside_tree():
-			#Believe this might fix the Grass Color bug (part 1)
-			var grass_mat :ShaderMaterial= grass_planter.multimesh.mesh.material as ShaderMaterial
+			var grass_mat : ShaderMaterial = grass_planter.multimesh.mesh.material as ShaderMaterial
 			if mode == Mode.SEMI_ROUND or Mode.SPHERICAL:
 				grass_mat.set_shader_parameter("is_merge_round", true)
 			else:
@@ -41,7 +40,7 @@ const BLEND_EDGE_SENSITIVITY : float = 1.25
 
 var merge_threshold : float = MERGE_MODE[Mode.POLYHEDRON]
 
-var grass_planter : GrassPlanter = preload("res://addons/MarchingSquaresTerrain/algorithm/grass/grass_planter.tscn").instantiate()
+var grass_planter : MarchingSquaresGrassPlanter = preload("res://addons/MarchingSquaresTerrain/algorithm/grass/marching_squares_grass_planter.tscn").instantiate()
 
 var higher_poly_floors : bool = true
 
@@ -166,7 +165,7 @@ func regenerate_mesh():
 	if not find_child("GrassPlanter"):
 		grass_planter = get_node_or_null("GrassPlanter")
 		if not grass_planter:
-			grass_planter = GrassPlanter.new()
+			grass_planter = MarchingSquaresGrassPlanter.new()
 			if not color_map_0 or not color_map_1:
 				generate_color_maps()
 			if not grass_mask_map:

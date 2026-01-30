@@ -4,7 +4,7 @@ This guide serves to explain how the internal tool system and its related code i
 
 ## Terrain Explained (SIMPLE VERSION)
 
-The terrain is built from the marching squares algorithm, which means that unlike the marching cubes algorithm it can only have variation in the Y axis. For this reason, the terrain is built from a cellular grid (adjustable in the terrain settings tab in the plugin) and all the terrain behaviour is calculated from values stored in or referencing to those cells. For example, the process for increasing terrain height works as follows: 1) select the cells you want to change the height value for; 2) pick a higher number; 3) store those new numbers in a height map. Almost everything in the plugin works this way, color values for the grass and floor, texture id's, etc...
+The terrain is built from the marching squares algorithm, which means that unlike the marching cubes algorithm it can only have variation in the Y axis. For this reason, the terrain is built from a cellular grid (adjustable in the terrain settings tab in the plugin) and all the terrain behaviour is calculated from values stored in or referencing to those cells. For example, the process for increasing terrain height works as follows: 1. select the cells you want to change the height value for; 2. pick a higher number; 3. store those new numbers in a height map. Almost everything in the plugin works this way, color values for the grass and floor, texture id's, etc...
 
 ## Tools Explained
 
@@ -21,6 +21,7 @@ These attributes can theoretically be used for any type of brush the user wants 
 * strength → controls how big the effect of the smooth tool is
 * flatten → will make all the selected terrain the same height as the first selected cell
 * falloff → will make the effect of certain brushes decrease the further the selected terrain cells are from the center of the selection
+* quick_paint_selection → allows for height based brushes to instantly apply textures without having to use the vertex paint tool. The smooth tool skips skips this behaviour when the quick_paint_selection is set to "none". Other tools will apply the base wall and floor textures instead.
 
 ### Brush Specific Attributes
 
@@ -29,6 +30,8 @@ These are attributes specifically made to work for a singular specific brush and
 * mask_mode → controls if selected terrain should have grass spawn on it or not
 * material → used for selecting which texture to use while vertex painting the terrain
 * texture_name → used to change the material names in the plugin interface
+* texture_preset → used to change all the vertex painting settings via pre-saved resources. This allows for quick swapping between aesthetics.
+* paint_walls → self explanatory.
 
 ### Non-Brush Related Attributes
 
@@ -70,9 +73,11 @@ The current _type_ field options are:
 2. SLIDER,
 3. OPTION,
 4. TEXT,
-5. CHUNK,
-6. TERRAIN,
-7. ERROR, _# This one is used as a failsafe if the internal logic fails._
+5. PRESET,
+6. QUICK_PAINT,
+7. CHUNK,
+8. TERRAIN,
+9. ERROR, _# This one is used as a failsafe if the internal logic fails._
 
 If you have a tool that uses custom logic that has nothing to do with brushes, then it is recommended to make its own option for it like CHUNK or TERRAIN. Adding new options can be done in the **MarchingSquaresToolAttributes** script under the `enum SettingType` variable. Make sure to also include the new setting type in the `type_map` variable in the `show_tool_attributes(tool_index: int) -> void` function.
 

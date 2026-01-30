@@ -73,7 +73,7 @@ var should_mask_grass : bool = false
 var _syncing_from_terrain : bool = false
 
 # Currently selected preset for vertex textures (DOES change the global terrain)
-var current_texture_preset : MarchingSquaresTexturePreset = null:
+var current_texture_preset : MarchingSquaresTexturePreset = EMPTY_TEXTURE_PRESET.duplicate():
 	set(value):
 		current_texture_preset = value
 		current_quick_paint = null

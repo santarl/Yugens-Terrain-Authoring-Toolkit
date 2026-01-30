@@ -13,6 +13,7 @@ For community showcases, feature requests and bug reporting, please refer to the
 * Used to elevate or lower terrain.
   * Holding **[SHIFT]** and pressing **[LEFT MOUSE BUTTON]** with most brush tools selected will keep adding terrain to the selection even after letting go of the original mouse click.
   * In the same fashion as above, holding **[SHIFT]** and using the **[SCROLL WHEEL]** decreases and increases the current brush size.
+  * You can also press **[ALT]** to deselect the current draw selection.
 
 ### Level Tool
 * Used to level terrain to a certain height.
@@ -23,6 +24,9 @@ For community showcases, feature requests and bug reporting, please refer to the
 
 ### Bridge Tool
 * Used to create a bridge between two points.
+  * The bridge curve falloff can be set via the "ease value" attribute. For reference see the below ease value cheatsheet (see also the _documentation+_ folder).
+
+![Godot Ease Value Cheatsheet](documentation+\ease_cheatsheet.png "Ease Cheatsheet")
 
 ### Grass Mask Tool
 * Used to control where grass gets placed.
@@ -30,9 +34,15 @@ For community showcases, feature requests and bug reporting, please refer to the
 ### Vertex Paint Tool
 * Used to paint textures onto the terrain.
   * 16 textures in total of which 15 can be editted.
-  * The final texture is used for turning terrain invisible.
-  * The first 6 textures can have grass.
-  * Texture names can be changed at will.
+    * The final 16th texture is used for turning terrain invisible.
+    * The first 6 textures can have grass.
+    * Texture names can be changed at will.
+  * Texture presets can be used to quickly swap between texture pallets.
+    * They can be exported in the plugin via the right hand UI panel at the bottom.
+  * "Quick Paints" are a way to quickly set textures while moddeling the terrain.
+    * They can be accesed via any of the height based terrain brushes.
+    * You can make global or texture preset specific ones. 
+      * → Create a **MarchingSquaresQuickPaint** resource in their dedicated folders in the parent plugin folder.
 
 ### Debug Brush Tool
 * Used to print the following data about selected cells:
@@ -46,7 +56,12 @@ For community showcases, feature requests and bug reporting, please refer to the
 
 ### Terrain Settings Tool
 * Used to tweak global terrain settings.
-  * These include: wall color and texture, chunk cell size and dimensions, grass amount and more...
+  * The "Blend Mode" dropdown menu allows you to set the terrain's texture blending mode to suit your liking.
+  * Setting a "Noise Hmap" makes the base chunk height generation procedural instead of flat.
+  * Setting the "Animation Fps" value to more than 0 makes the grass sprites move with limited fps.
+    * Keeping it at 0 gives the grass a smooth wind based effect.
+  * "Ridge Threshold" controls how close grass sprites get spawned to lowering terrain(cliffs).
+  * "Ledge Threshold" controls how close grass sprites get spawned to elevating terrain (walls).
 
 ## License (MIT)
 Feel free to use, improve and change this plugin according to your needs, but include a copyright mention to the original project and author.

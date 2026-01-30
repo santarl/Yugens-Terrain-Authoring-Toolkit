@@ -5,6 +5,7 @@ This small guide explains where you can find the code for several (smaller) feat
 ### Grass and Texture Mixing
 
 * **MarchingSquaresChunk** script → `add_point(x: float, y: float, z: float, uv_x: float = 0, uv_y: float = 0, diag_midpoint: bool = false)` function.
+* **mst_terrain** gdshader → fragment function.
 
 Here you can change the logic for how the color_0 and color_1 variables are calculated to change how the grass appears and floor textures get mixed.
 

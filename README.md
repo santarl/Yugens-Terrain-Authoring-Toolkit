@@ -26,13 +26,10 @@ Watch the [YouTube](https://www.youtube.com/watch?v=TV3QyGNMAwo) video to get st
 
 ## Known Issues
 
-1. Icons appear smaller with the new 4.6 godot standard theme (will be fixed in 1.1)
-3. Wall textures don't disappear properly when the "void" texture is selected (will be fixed in 1.1)
-4. Collision shapes dissapear when in front of a MarchingSquaresTerrain node
-5. Terrain that is copied into a new open scene fails to load on startup (will be fixed in 1.1)
-6. Brush visuals and cell data doesn't scale with cell_size so very small and very big cell sizes don't work properly
-7. Running physics on a separate thread crashes the plugin (will be fixed in 1.2)
-8. Terrain sizes are very big causing warning messages (will be fixed in 1.2)
+1. Collision shapes dissapear when in front of a MarchingSquaresTerrain node
+2. Brush visuals and cell data doesn't scale with cell_size so very small and very big cell sizes don't work properly
+3. Running physics on a separate thread crashes the plugin (will be fixed in 1.2)
+4. Terrain sizes are very big causing warning messages (will be fixed in 1.2)
 
 ## Credits
 

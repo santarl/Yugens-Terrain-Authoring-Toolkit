@@ -7,7 +7,7 @@
 [ext_resource type="Shader" uid="uid://ltkimbmrvpyo" path="res://addons/MarchingSquaresTerrain/resources/shaders/mst_terrain.gdshader" id="5_8u2c4"]
 [ext_resource type="Script" uid="uid://cql4d8s5t5xcx" path="res://addons/MarchingSquaresTerrain/algorithm/terrain/marching_squares_terrain_chunk.gd" id="5_tm8h6"]
 [ext_resource type="Texture2D" uid="uid://csvthlqhb8g5j" path="res://addons/MarchingSquaresTerrain/resources/plugin materials/void_texture.tres" id="6_n52ak"]
-[ext_resource type="Script" uid="uid://22l7ysgniux3" path="res://addons/MarchingSquaresTerrain/algorithm/grass/grass_planter.gd" id="7_n52ak"]
+[ext_resource type="Script" uid="uid://22l7ysgniux3" path="res://addons/MarchingSquaresTerrain/algorithm/grass/marching_squares_grass_planter.gd" id="7_n52ak"]
 [ext_resource type="Shader" uid="uid://0fijvq5fdcep" path="res://addons/MarchingSquaresTerrain/resources/shaders/mst_grass.gdshader" id="9_8jcab"]
 [ext_resource type="Texture2D" uid="uid://cxvnfgy865wsk" path="res://addons/MarchingSquaresTerrain/resources/plugin materials/grass_leaf_sprite.png" id="10_6m51i"]
 [ext_resource type="Texture2D" uid="uid://dk1t5hy2tiil7" path="res://addons/MarchingSquaresTerrain/resources/plugin materials/wind_noise_texture.tres" id="11_n8yor"]
