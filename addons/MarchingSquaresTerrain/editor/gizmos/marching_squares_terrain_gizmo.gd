@@ -55,9 +55,9 @@ func _redraw():
 		var z = int(floor(((pos.z + terrain_system.cell_size.y/2) / terrain_system.cell_size.y) - chunk_z * (terrain_system.dimensions.z - 1)))
 		cursor_cell_coords = Vector2i(x, z)
 		
-		# When setting, if the clicked tile is not part of the pattern and alt not held, go to draw mode
-		var cursor_in_pattern: bool = terrain_plugin.current_draw_pattern.has(cursor_chunk_coords) and terrain_plugin.current_draw_pattern[cursor_chunk_coords].has(cursor_cell_coords)
-		if not cursor_in_pattern and not Input.is_key_pressed(KEY_ALT):
+		# When setting, if there is no pattern and alt not held, go to draw mode
+		var has_pattern : bool = not terrain_plugin.current_draw_pattern.is_empty()
+		if not has_pattern and not Input.is_key_pressed(KEY_ALT):
 			terrain_plugin.current_draw_pattern.clear()
 			terrain_plugin.is_setting = false
 			terrain_plugin.is_drawing = true
@@ -66,7 +66,7 @@ func _redraw():
 		# Otherwise, drag that pattern's height
 		else:
 			# If alt held, ONLY drag the cursor cell
-			if Input.is_key_pressed(KEY_ALT):
+			if Input.is_key_pressed(KEY_ALT) and terrain_system.chunks.has(cursor_chunk_coords):
 				terrain_plugin.current_draw_pattern.clear()
 				terrain_plugin.current_draw_pattern[cursor_chunk_coords] = {}
 				terrain_plugin.current_draw_pattern[cursor_chunk_coords][cursor_cell_coords] = terrain_system.chunks[cursor_chunk_coords].get_height(cursor_cell_coords)
