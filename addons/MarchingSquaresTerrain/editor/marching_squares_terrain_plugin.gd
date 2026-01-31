@@ -454,6 +454,83 @@ func handle_mouse(camera: Camera3D, event: InputEvent) -> int:
 	return EditorPlugin.AFTER_GUI_INPUT_PASS
 
 
+# Calculates brush pattern and updates current_draw_pattern
+func update_draw_pattern(b_pos: Vector3):
+	var terrain_system : MarchingSquaresTerrain = current_terrain_node
+	
+	# Calculate bounds
+	var pos_tl := Vector2(b_pos.x + terrain_system.cell_size.x - brush_size/2, b_pos.z + terrain_system.cell_size.y - brush_size/2)
+	var pos_br := Vector2(b_pos.x + terrain_system.cell_size.x + brush_size/2, b_pos.z + terrain_system.cell_size.y + brush_size/2)
+	
+	var chunk_tl_x := floori(pos_tl.x / ((terrain_system.dimensions.x - 1) * terrain_system.cell_size.x))
+	var chunk_tl_z := floori(pos_tl.y / ((terrain_system.dimensions.z - 1) * terrain_system.cell_size.y))
+	
+	var chunk_br_x := floori(pos_br.x / ((terrain_system.dimensions.x - 1) * terrain_system.cell_size.x))
+	var chunk_br_z := floori(pos_br.y / ((terrain_system.dimensions.z - 1) * terrain_system.cell_size.y))
+	
+	var x_tl := floori(pos_tl.x / terrain_system.cell_size.x - chunk_tl_x * (terrain_system.dimensions.x - 1))
+	var z_tl := floori(pos_tl.y / terrain_system.cell_size.y - chunk_tl_z * (terrain_system.dimensions.z - 1))
+	
+	var x_br := floori(pos_br.x / terrain_system.cell_size.x - chunk_br_x * (terrain_system.dimensions.x - 1))
+	var z_br := floori(pos_br.y / terrain_system.cell_size.y - chunk_br_z * (terrain_system.dimensions.z - 1))
+	
+	var max_distance = brush_size / 2
+	match current_brush_index:
+		0: # Round brush
+			max_distance *= max_distance
+		1: # Square brush
+			max_distance *= max_distance * 2
+	
+	for chunk_z in range(chunk_tl_z, chunk_br_z+1):
+		for chunk_x in range(chunk_tl_x, chunk_br_x+1):
+			var cursor_chunk_coords = Vector2i(chunk_x, chunk_z)
+			if not terrain_system.chunks.has(cursor_chunk_coords):
+				continue
+			var chunk: MarchingSquaresTerrainChunk = terrain_system.chunks[cursor_chunk_coords]
+			
+			var x_min : int = x_tl if chunk_x == chunk_tl_x else 0
+			var x_max : int = x_br if chunk_x == chunk_br_x else int(terrain_system.dimensions.x)
+			
+			var z_min : int = z_tl if chunk_z == chunk_tl_z else 0
+			var z_max : int = z_br if chunk_z == chunk_br_z else int(terrain_system.dimensions.z)
+			
+			for z in range(z_min, z_max):
+				for x in range(x_min, x_max):
+					var cursor_cell_coords = Vector2i(x, z)
+					var world_x: float = (chunk_x * (terrain_system.dimensions.x-1) + x) * terrain_system.cell_size.x
+					var world_z: float = (chunk_z * (terrain_system.dimensions.z-1) + z) * terrain_system.cell_size.y
+					
+					var distance_squared: float = Vector2(b_pos.x, b_pos.z).distance_squared_to(Vector2(world_x, world_z))
+					if distance_squared > max_distance:
+						continue
+					
+					var sample
+					if falloff:
+						var t: float
+						match current_brush_index:
+							0: # Round brush
+								var d = (max_distance - distance_squared)/max_distance
+								t = clamp(d, 0.0, 1.0)
+							1: # Square brush
+								var local = Vector2(world_x - b_pos.x, world_z - b_pos.z)
+								var uv = local / (brush_size * 0.5)
+								var d = max(abs(uv.x), abs(uv.y))
+								t = 1.0 - clamp(d, 0.2, 1.0) 
+						sample = falloff_curve.sample(clamp(t, 0.001, 0.999))
+					else:
+						sample = 1.0
+					
+					# Store largest sample
+					if not current_draw_pattern.has(cursor_chunk_coords):
+						current_draw_pattern[cursor_chunk_coords] = {}
+					if current_draw_pattern[cursor_chunk_coords].has(cursor_cell_coords):
+						var prev_sample = current_draw_pattern[cursor_chunk_coords][cursor_cell_coords]
+						if sample > prev_sample:
+							current_draw_pattern[cursor_chunk_coords][cursor_cell_coords] = sample
+					else:
+						current_draw_pattern[cursor_chunk_coords][cursor_cell_coords] = sample
+
+
 func draw_pattern(terrain: MarchingSquaresTerrain):
 	var undo_redo := MarchingSquaresTerrainPlugin.instance.get_undo_redo()
 	
