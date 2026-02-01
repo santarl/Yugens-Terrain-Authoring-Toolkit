@@ -1,8 +1,21 @@
 @tool
 extends Node3D
-# Needs to be kept as a Node3D so that the 3d gizmo works. no 3d functionality is otherwise used, it is delegated to the chunks
 class_name MarchingSquaresTerrain
 
+
+## Custom data directory path (leave empty for auto scene-relative path)
+## Format when empty: [SceneDir]/[SceneName]_TerrainData/[NodeName]_[UID]/
+@export var data_directory : String = "":
+	set(value):
+		data_directory = value
+
+## Unique identifier for this terrain instance (auto-generated on first save)
+## Prevents path collisions when nodes are recreated with same name
+@export_storage var _terrain_uid : String = ""
+
+## True after external storage has been initialized
+## Used to detect when migration from embedded data is needed
+@export_storage var _storage_initialized : bool = false
 
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var dimensions : Vector3i = Vector3i(33, 32, 33): # Total amount of height values in X and Z direction, and total height range
 	set(value):
@@ -419,28 +432,41 @@ func _init() -> void:
 	grass_mesh.material = base_grass_mesh.material.duplicate(true)
 
 
+func _notification(what: int) -> void:
+	# Save all dirty chunks to external storage before scene save
+	if what == NOTIFICATION_EDITOR_PRE_SAVE:
+		if Engine.is_editor_hint():
+			MSTDataHandler.save_all_chunks(self)
+
+
 func _enter_tree() -> void:
 	call_deferred("_deferred_enter_tree")
 
 
 func _deferred_enter_tree() -> void:
-	if not Engine.is_editor_hint():
-		return
-	
 	# Apply all persisted textures/colors to this terrain's unique shader materials
 	# This is needed because _init() creates fresh duplicated materials that don't have
 	# the terrain's saved texture values - only the base resource defaults
 	force_batch_update()
-	
+
+	# Populate chunks dictionary from scene children
 	chunks.clear()
 	for chunk in get_children():
 		if chunk is MarchingSquaresTerrainChunk:
 			chunks[chunk.chunk_coords] = chunk
 			chunk.terrain_system = self
-			
 			chunk.grass_planter = null
-			
-			chunk.initialize_terrain(true)
+
+	# Load external data if storage was previously initialized
+	if _storage_initialized:
+		MSTDataHandler.load_terrain_data(self)
+	elif Engine.is_editor_hint() and MSTDataHandler.needs_migration(self):
+		# Auto-migrate embedded data to external storage (editor only)
+		MSTDataHandler.migrate_to_external_storage(self)
+
+	# Initialize all chunks (regenerate mesh/grass from loaded data)
+	for chunk in chunks.values():
+		chunk.initialize_terrain(true)
 
 
 func has_chunk(x: int, z: int) -> bool:

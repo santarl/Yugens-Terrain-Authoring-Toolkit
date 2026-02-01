@@ -19,20 +19,22 @@ const MERGE_MODE = {
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var merge_mode : Mode = Mode.POLYHEDRON: # The max height distance between points before a wall is created between them
 	set(mode):
 		merge_mode = mode
-		if is_inside_tree():
+		if is_inside_tree() and grass_planter and grass_planter.multimesh:
 			var grass_mat : ShaderMaterial = grass_planter.multimesh.mesh.material as ShaderMaterial
-			if mode == Mode.SEMI_ROUND or Mode.SPHERICAL:
+			if mode == Mode.SEMI_ROUND or mode == Mode.SPHERICAL:
 				grass_mat.set_shader_parameter("is_merge_round", true)
 			else:
 				grass_mat.set_shader_parameter("is_merge_round", false)
 			merge_threshold = MERGE_MODE[mode]
 			regenerate_all_cells()
 @export_storage var height_map : Array # Stores the heights from the heightmap
-@export_storage var color_map_0 : PackedColorArray # Stores the colors from vertex_color_0 (ground)
-@export_storage var color_map_1 : PackedColorArray # Stores the colors from vertex_color_1 (ground)
-@export_storage var wall_color_map_0 : PackedColorArray # Stores the colors for wall vertices (slot encoding channel 0)
-@export_storage var wall_color_map_1 : PackedColorArray # Stores the colors for wall vertices (slot encoding channel 1)
-@export_storage var grass_mask_map : PackedColorArray # Stores if a cell should have grass or not
+# Color maps are now ephemeral and created at runtime
+# Persisted via MSTDataHandler
+var color_map_0 : PackedColorArray # Stores the colors from vertex_color_0 (ground)
+var color_map_1 : PackedColorArray # Stores the colors from vertex_color_1 (ground)
+var wall_color_map_0 : PackedColorArray # Stores the colors for wall vertices (slot encoding channel 0)
+var wall_color_map_1 : PackedColorArray # Stores the colors for wall vertices (slot encoding channel 1)
+var grass_mask_map : PackedColorArray # Stores if a cell should have grass or not
 
 var merge_threshold : float = MERGE_MODE[Mode.POLYHEDRON]
 
@@ -78,6 +80,13 @@ var cell_mat_c : int = 0
 
 var needs_update : Array[Array] # Stores which tiles need to be updated because one of their corners' heights was changed.
 var _skip_save_on_exit : bool = false # Set to true when chunk is removed temporarily (undo/redo)
+var _data_dirty : bool = false # Set to true when source data changes, triggers save in MSTDataHandler
+
+# Temporary storage for ephemeral resources during scene save
+var _temp_mesh : ArrayMesh
+var _temp_grass_multimesh : MultiMesh
+var _temp_collision_shapes : Array[ConcavePolygonShape3D] = []  #old scenes may have duplicates
+var _temp_height_map : Array  # Source data - saved to external storage, not scene file
 
 # Terrain blend options to allow for smooth color and height blend influence at transitions and at different heights 
 var lower_thresh : float = 0.3 # Sharp bands: < 0.3 = lower color
@@ -98,42 +107,113 @@ func initialize_terrain(should_regenerate_mesh: bool = true):
 		grass_planter = get_node_or_null("GrassPlanter")
 		if grass_planter:
 			grass_planter._chunk = self
-	if Engine.is_editor_hint():
-		if not height_map:
-			generate_height_map()
-		if not color_map_0 or not color_map_1:
-			generate_color_maps()
-		if not wall_color_map_0 or not wall_color_map_1:
-			generate_wall_color_maps()
-		if not grass_mask_map:
-			generate_grass_mask_map()
-		if not mesh and should_regenerate_mesh:
-			regenerate_mesh()
-		for child in get_children():
-			if child is StaticBody3D:
-				child.collision_layer = 17
-				child.set_collision_layer_value(terrain_system.extra_collision_layer, true)
-		
-		grass_planter.setup(self, true)
-		grass_planter.regenerate_all_cells()
-	
-	else:
-		printerr("ERROR: Trying to generate terrain during runtime (NOT SUPPORTED)")
+
+	# Generate maps if not loaded from external storage (works for both editor and runtime)
+	if not height_map:
+		generate_height_map()
+	if not color_map_0 or not color_map_1:
+		generate_color_maps()
+	if not wall_color_map_0 or not wall_color_map_1:
+		generate_wall_color_maps()
+	if not grass_mask_map:
+		generate_grass_mask_map()
+
+	if not mesh and should_regenerate_mesh:
+		regenerate_mesh()
+
+	for child in get_children():
+		if child is StaticBody3D:
+			child.collision_layer = 17
+			child.set_collision_layer_value(terrain_system.extra_collision_layer, true)
+
+	grass_planter.setup(self, true)
+	grass_planter.regenerate_all_cells()
+
+
+func _notification(what: int) -> void:
+	if not Engine.is_editor_hint():
+		return
+
+	match what:
+		NOTIFICATION_EDITOR_PRE_SAVE:
+			# Store height_map and clear - source data saved to external storage, not scene
+			_temp_height_map = height_map
+			height_map = []
+
+			# Store mesh and clear to prevent serialization
+			_temp_mesh = mesh
+			mesh = null
+
+			# Store grass multimesh and clear
+			if grass_planter and grass_planter.multimesh:
+				_temp_grass_multimesh = grass_planter.multimesh
+				grass_planter.multimesh = null
+
+			# Handle ALL collision bodies (old scenes may have multiple duplicates!)
+			_temp_collision_shapes.clear()
+			var bodies_to_free : Array[StaticBody3D] = []
+			for child in get_children():
+				if child is StaticBody3D:
+					for shape_child in child.get_children():
+						if shape_child is CollisionShape3D and shape_child.shape is ConcavePolygonShape3D:
+							_temp_collision_shapes.append(shape_child.shape)
+							shape_child.shape = null  # Clear to prevent sub_resource save
+						shape_child.owner = null
+					child.owner = null
+					bodies_to_free.append(child)
+			# Free all bodies (after iteration to avoid modifying while iterating)
+			for body in bodies_to_free:
+				body.queue_free()
+
+		NOTIFICATION_EDITOR_POST_SAVE:
+			# Restore height_map
+			if _temp_height_map:
+				height_map = _temp_height_map
+				_temp_height_map = []
+
+			# Restore mesh
+			if _temp_mesh:
+				mesh = _temp_mesh
+				_temp_mesh = null
+
+			# Restore grass multimesh
+			if _temp_grass_multimesh and grass_planter:
+				grass_planter.multimesh = _temp_grass_multimesh
+				_temp_grass_multimesh = null
+
+			# Recreate ONE collision body (only need one, even if old scene had duplicates)
+			if not _temp_collision_shapes.is_empty():
+				call_deferred("_recreate_collision_body")
+
+		NOTIFICATION_PREDELETE:
+			# Safety cleanup - clear owner on ALL collision nodes
+			for child in get_children():
+				if child is StaticBody3D:
+					child.owner = null
+					for shape_child in child.get_children():
+						if shape_child is CollisionShape3D:
+							shape_child.owner = null
 
 
 func _exit_tree() -> void:
+	# Clear temp references
+	_temp_height_map = []
+	_temp_mesh = null
+	_temp_grass_multimesh = null
+	_temp_collision_shapes.clear()
+
+	# Clear owner on ALL collision nodes to prevent serialization edge cases
+	if Engine.is_editor_hint():
+		for child in get_children():
+			if child is StaticBody3D:
+				child.owner = null
+				for shape_child in child.get_children():
+					if shape_child is CollisionShape3D:
+						shape_child.owner = null
+
 	# Only erase if terrain_system still has THIS chunk at chunk_coords
-	# (avoids double-erasure when remove_chunk_from_tree already erased it)
 	if terrain_system and terrain_system.chunks.get(chunk_coords) == self:
 		terrain_system.chunks.erase(chunk_coords)
-	
-	# Only save mesh if not being removed temporarily (undo/redo)
-	if not _skip_save_on_exit:
-		# Guard get_tree() - can be null during multi-scene transitions
-		var tree = get_tree()
-		if tree and tree.current_scene and Engine.is_editor_hint():
-			var scene = tree.current_scene
-			ResourceSaver.save(mesh, "res://"+scene.name+"/"+name+".tres", ResourceSaver.FLAG_COMPRESS)
 
 
 func regenerate_mesh():
@@ -663,11 +743,11 @@ func generate_wall_color_maps():
 
 
 func generate_grass_mask_map():
-	grass_mask_map = Array()
+	grass_mask_map = PackedColorArray()
 	grass_mask_map.resize(dimensions.z * dimensions.x)
 	for z in range(dimensions.z):
 		for x in range(dimensions.x):
-			grass_mask_map[z*dimensions.z + x] = Color(1.0, 1.0, 1.0, 1.0)
+			grass_mask_map[z*dimensions.x + x] = Color(1.0, 1.0, 1.0, 1.0)
 
 
 func get_height(cc: Vector2i) -> float:
@@ -700,6 +780,7 @@ func get_grass_mask(cc: Vector2i) -> Color:
 func draw_height(x: int, z: int, y: float):
 	# Contains chunks that were updated
 	height_map[z][x] = y
+	mark_dirty()
 	notify_needs_update(z, x)
 	notify_needs_update(z, x-1)
 	notify_needs_update(z-1, x)
@@ -708,6 +789,7 @@ func draw_height(x: int, z: int, y: float):
 
 func draw_color_0(x: int, z: int, color: Color):
 	color_map_0[z*dimensions.x + x] = color
+	mark_dirty()
 	notify_needs_update(z, x)
 	notify_needs_update(z, x-1)
 	notify_needs_update(z-1, x)
@@ -716,6 +798,7 @@ func draw_color_0(x: int, z: int, color: Color):
 
 func draw_color_1(x: int, z: int, color: Color):
 	color_map_1[z*dimensions.x + x] = color
+	mark_dirty()
 	notify_needs_update(z, x)
 	notify_needs_update(z, x-1)
 	notify_needs_update(z-1, x)
@@ -724,6 +807,7 @@ func draw_color_1(x: int, z: int, color: Color):
 
 func draw_wall_color_0(x: int, z: int, color: Color):
 	wall_color_map_0[z*dimensions.x + x] = color
+	mark_dirty()
 	notify_needs_update(z, x)
 	notify_needs_update(z, x-1)
 	notify_needs_update(z-1, x)
@@ -732,6 +816,7 @@ func draw_wall_color_0(x: int, z: int, color: Color):
 
 func draw_wall_color_1(x: int, z: int, color: Color):
 	wall_color_map_1[z*dimensions.x + x] = color
+	mark_dirty()
 	notify_needs_update(z, x)
 	notify_needs_update(z, x-1)
 	notify_needs_update(z-1, x)
@@ -740,6 +825,7 @@ func draw_wall_color_1(x: int, z: int, color: Color):
 
 func draw_grass_mask(x: int, z: int, masked: Color):
 	grass_mask_map[z*dimensions.x + x] = masked
+	mark_dirty()
 	notify_needs_update(z, x)
 	notify_needs_update(z, x-1)
 	notify_needs_update(z-1, x)
@@ -749,8 +835,42 @@ func draw_grass_mask(x: int, z: int, masked: Color):
 func notify_needs_update(z: int, x: int):
 	if z < 0 or z >= terrain_system.dimensions.z-1 or x < 0 or x >= terrain_system.dimensions.x-1:
 		return
-	
+
 	needs_update[z][x] = true
+
+
+## Mark chunk as having modified source data - triggers save in MSTDataHandler
+func mark_dirty() -> void:
+	_data_dirty = true
+
+
+## Recreate collision body after scene save (deferred call for proper physics refresh)
+func _recreate_collision_body() -> void:
+	if not is_inside_tree() or _temp_collision_shapes.is_empty():
+		_temp_collision_shapes.clear()
+		return
+
+	# Only create ONE body with the FIRST shape
+	var shape : ConcavePolygonShape3D = _temp_collision_shapes[0]
+	_temp_collision_shapes.clear()
+
+	var body := StaticBody3D.new()
+	body.collision_layer = 17
+	if terrain_system:
+		body.set_collision_layer_value(terrain_system.extra_collision_layer, true)
+
+	var col_shape := CollisionShape3D.new()
+	col_shape.shape = shape
+	col_shape.visible = false
+	body.add_child(col_shape)
+	add_child(body)
+
+	# Set owner for editor visibility at first, but we clear it later
+	if Engine.is_editor_hint():
+		var scene_root = Engine.get_singleton("EditorInterface").get_edited_scene_root()
+		if scene_root:
+			body.owner = scene_root
+			col_shape.owner = scene_root
 
 
 func regenerate_all_cells():
