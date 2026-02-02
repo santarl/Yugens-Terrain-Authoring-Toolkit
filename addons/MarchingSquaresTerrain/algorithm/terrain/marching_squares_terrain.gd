@@ -6,8 +6,8 @@ class_name MarchingSquaresTerrain
 enum StorageMode { RUNTIME, BAKED }
 
 ## The storage mode for terrain data. 
-## RUNTIME: Rebuilds mesh/collision from source data on load (Smallest files, higher load time)
-## BAKED: Saves and loads pre-built mesh/collision assets (Larger files, instant load)
+## RUNTIME: Saves disk space. Generates the mesh when the scene loads (slower load, smaller files).
+## BAKED: Saves load time. Loads a pre-built mesh from disk (instant load, larger files).
 @export var storage_mode : StorageMode = StorageMode.RUNTIME:
 	set(value):
 		if storage_mode != value:
@@ -18,9 +18,10 @@ enum StorageMode { RUNTIME, BAKED }
 					chunk.mark_dirty()
 			print_verbose("MST: Storage mode changed. All chunks marked for save.")
 
-## Custom data directory path (leave empty for auto scene-relative path)
-## Format when empty: [SceneDir]/[SceneName]_TerrainData/[NodeName]_[UID]/
-@export var data_directory : String = "":
+## The folder where this terrain's data is saved. 
+## If left empty, it automatically fills with a folder name relative to your scene file.
+## Note: Manually setting a path locks the save location even if you rename the terrain node later.
+@export_dir var data_directory : String = "":
 	set(value):
 		data_directory = value
 
@@ -460,8 +461,15 @@ func _notification(what: int) -> void:
 func _enter_tree() -> void:
 	call_deferred("_deferred_enter_tree")
 
+func _initialize_data_directory() -> void:
+	if Engine.is_editor_hint() and data_directory.is_empty():
+		var auto_path := MSTDataHandler.get_data_directory(self)
+		if not auto_path.is_empty():
+			data_directory = auto_path
 
 func _deferred_enter_tree() -> void:
+	_initialize_data_directory()
+	
 	# Apply all persisted textures/colors to this terrain's unique shader materials
 	# This is needed because _init() creates fresh duplicated materials that don't have
 	# the terrain's saved texture values - only the base resource defaults
